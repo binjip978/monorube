@@ -8,9 +8,11 @@ import (
 func isPrime(number uint64) bool {
 	var i uint64 = 2
 	for i < number {
-		if number%2 == 0 {
+		if number%i == 0 {
 			return false
 		}
+
+		i++
 	}
 
 	return true

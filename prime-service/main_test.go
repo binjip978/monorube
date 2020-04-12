@@ -20,8 +20,8 @@ func TestPrime(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		if isPrime(entry.number) != entry.isPrime {
-			t.Errorf("case for number: %d is not correct", entry.number)
+		if res := isPrime(entry.number); res != entry.isPrime {
+			t.Errorf("case for number: %d is not correct, result was %t", entry.number, res)
 		}
 	}
 }
