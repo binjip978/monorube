@@ -68,4 +68,18 @@ func TestServePrime(t *testing.T) {
 	if response.Number != 11 || !response.IsPrime || response.Err != "" {
 		t.Error("response struct is not correct")
 	}
+
+	resp, _ = http.Get(ts.URL + "/prime?n=hello")
+	b, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("should read response body, got %v", err)
+	}
+	defer resp.Body.Close()
+	err = json.Unmarshal(b, &response)
+	if err != nil {
+		t.Errorf("should parse response body to go struct, got %v", err)
+	}
+	if response.Err == "" {
+		t.Error("response struct shold contain an error")
+	}
 }
