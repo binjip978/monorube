@@ -1,6 +1,12 @@
 package main
 
-import "testing"
+import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
 func TestPrime(t *testing.T) {
 	var table = []struct {
@@ -23,5 +29,43 @@ func TestPrime(t *testing.T) {
 		if res := isPrime(entry.number); res != entry.isPrime {
 			t.Errorf("case for number: %d is not correct, result was %t", entry.number, res)
 		}
+	}
+}
+
+func TestHealthz(t *testing.T) {
+	srv := setupServer()
+	ts := httptest.NewServer(srv.Handler)
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL + "/healthz")
+	if err != nil {
+		t.Errorf("get should succeed, got %v", err)
+	}
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("should return 200, got %d", res.StatusCode)
+	}
+}
+
+func TestServePrime(t *testing.T) {
+	srv := setupServer()
+	ts := httptest.NewServer(srv.Handler)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/prime?n=11")
+	if err != nil {
+		t.Errorf("get should succeed, got %v", err)
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("should read response body, got %v", err)
+	}
+	defer resp.Body.Close()
+	var response Response
+	err = json.Unmarshal(b, &response)
+	if err != nil {
+		t.Errorf("should parse response body to go struct, got %v", err)
+	}
+	if response.Number != 11 || !response.IsPrime || response.Err != "" {
+		t.Error("response struct is not correct")
 	}
 }
