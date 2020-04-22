@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: prime
+spec:
+  replicas: 2
+  selector:
+    app: prime
+  template:
+    metadata:
+      name: prime
+      labels:
+        app: prime
+    spec:
+      containers:
+        - name: prime
+          image: binjip978/prime-service:latest
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: prime-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: prime
+  ports:
+  - port: 8080
+    targetPort: 8080

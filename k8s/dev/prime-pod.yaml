@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: prime-pod 
+  labels:
+    name: prime-pod
+spec:
+  containers:
+  - name: prime-pod
+    image: binjip978/prime-service:latest
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 8080
+        protocol: TCP
