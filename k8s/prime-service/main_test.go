@@ -80,6 +80,32 @@ func TestServePrime(t *testing.T) {
 		t.Errorf("should parse response body to go struct, got %v", err)
 	}
 	if response.Err == "" {
-		t.Error("response struct shold contain an error")
+		t.Error("response struct should contain an error")
+	}
+}
+
+func TestStatus(t *testing.T) {
+	srv := setupServer()
+	ts := httptest.NewServer(srv.Handler)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/status")
+	if err != nil {
+		t.Errorf("get should succeed, got error: %v", err)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("should read response body, got %v", err)
+	}
+
+	var st ServiceStatus
+	json.Unmarshal(b, &st)
+	if err != nil {
+		t.Errorf("should parse response body to go struct, got %v", err)
+	}
+
+	if st.Hostname == "" {
+		t.Error("Hostname should not be empty")
 	}
 }

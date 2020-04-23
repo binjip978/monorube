@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -28,6 +29,15 @@ type Response struct {
 	Err     string `json:"err,omitempty"`
 }
 
+type ServiceStatus struct {
+	Hostname string `json:"hostname,omitempty"`
+}
+
+func status() ServiceStatus {
+	hostname, _ := os.Hostname()
+	return ServiceStatus{Hostname: hostname}
+}
+
 func (r *Response) bytes() []byte {
 	b, _ := json.Marshal(r)
 	return b
@@ -35,6 +45,13 @@ func (r *Response) bytes() []byte {
 
 func healthz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func serveStatus(w http.ResponseWriter, r *http.Request) {
+	st := status()
+	b, _ := json.Marshal(&st)
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
 }
 
 func servePrime(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +74,7 @@ func setupServer() *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthz)
 	mux.HandleFunc("/prime", servePrime)
+	mux.HandleFunc("/status", serveStatus)
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
