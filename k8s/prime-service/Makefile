@@ -1,19 +1,25 @@
+VERSION :=
+
 build: test
 	go build
 
 test:
 	go test -cover ./...
 
-docker: build
-	docker build . -t binjip978/prime-service:latest
+docker: build version
+	docker build . -t binjip978/prime-service:$(VERSION)
 
-docker-run:
-	docker run -d -p 8080:8080 binjip978/prime-service:latest
+docker-run: version
+	docker run -d -p 8080:8080 binjip978/prime-service:$(VERSION)
 
-docker-push:
-	docker push binjip978/prime-service:latest 
+docker-push: version
+	docker push binjip978/prime-service:$(VERSION)
 
 clean:
 	rm -f ./prime-service
 
-.PHONY: test build docker docker-run docker-push clean 
+version:
+	$(eval VERSION = $(shell grep 'const Version' version.go | awk '{print $$4}'))
+	@echo $(VERSION)
+
+.PHONY: test build docker docker-run docker-push clean version
