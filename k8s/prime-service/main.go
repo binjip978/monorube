@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func isPrime(number uint64) bool {
@@ -29,6 +33,7 @@ type Response struct {
 	Err     string `json:"err,omitempty"`
 }
 
+// ServiceStatus will return current service general info
 type ServiceStatus struct {
 	Hostname string `json:"hostname,omitempty"`
 }
@@ -55,9 +60,11 @@ func serveStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func servePrime(w http.ResponseWriter, r *http.Request) {
+	primeRequest.Inc()
 	numStr := r.URL.Query().Get("n")
 	num, err := strconv.ParseUint(numStr, 10, 64)
 	if err != nil {
+		primeRequestErrors.Inc()
 		w.WriteHeader(http.StatusOK)
 		resp := &Response{Err: fmt.Sprintf("can't parse %s as unsigned integer, got %v", numStr, err)}
 		w.Write(resp.bytes())
@@ -75,6 +82,7 @@ func setupServer() *http.Server {
 	mux.HandleFunc("/healthz", healthz)
 	mux.HandleFunc("/prime", servePrime)
 	mux.HandleFunc("/status", serveStatus)
+	mux.Handle("/metrics", promhttp.Handler())
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
@@ -82,6 +90,17 @@ func setupServer() *http.Server {
 
 	return &srv
 }
+
+var (
+	primeRequest = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "prime_service_prime_total_request",
+		Help: "The total number of request for checking prime numbers",
+	})
+	primeRequestErrors = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "prime_service_prime_total_errors",
+		Help: "The total number of error for checking prime numbers",
+	})
+)
 
 func main() {
 	srv := setupServer()
