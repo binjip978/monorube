@@ -1,7 +1,7 @@
 VERSION :=
 
 build: test
-	go build
+	GOOS=linux go build
 
 test:
 	go test -cover ./...
