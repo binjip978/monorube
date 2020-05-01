@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
   - name: prime-pod
-    image: binjip978/prime-service:v0.2.0
+    image: binjip978/prime-service:0.2.0-dev
     resources:
       limits:
         memory: "128Mi"
