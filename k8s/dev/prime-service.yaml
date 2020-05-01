@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: prime
-          image: binjip978/prime-service:0.1.0-dev
+          image: binjip978/prime-service:0.2.0-dev
           ports:
             - containerPort: 8080
 
