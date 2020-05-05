@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prime
+spec:
+  selector:
+    matchLabels:
+      app: prime
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: prime
+    spec:
+      containers:
+      - name: prime-pod
+        image: binjip978/prime-service:0.1.0-dev
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+        ports:
+          - containerPort: 8080
+            protocol: TCP
