@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: prime-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: prime
+  template:
+    metadata:
+      labels:
+        app: prime
+    spec:
+      containers:
+        - name: prime
+          image: binjip978/prime-service:0.2.0-dev
+          ports:
+            - containerPort: 8080
+
