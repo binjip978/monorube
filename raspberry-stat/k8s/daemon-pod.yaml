@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: temp-daemon
+spec:
+  containers:
+    - name: temp-daemon
+      image: binjip978/rasperrypi-temp:v1.0.0
+      livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 20
+          failureThreshold: 3
+      ports:
+        - containerPort: 5000
+          protocol: TCP
+          name: http

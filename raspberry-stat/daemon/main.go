@@ -53,10 +53,7 @@ var (
 	})
 )
 
-func main() {
-	cfg := parseConfig()
-	go tempLoop(cfg.period)
-
+func newServer(cfg config) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 	srv := http.Server{
@@ -64,5 +61,12 @@ func main() {
 		Handler: mux,
 	}
 
+	return &srv
+}
+
+func main() {
+	cfg := parseConfig()
+	srv := newServer(cfg)
+	go tempLoop(cfg.period)
 	log.Fatal(srv.ListenAndServe())
 }
