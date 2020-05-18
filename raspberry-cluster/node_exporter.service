@@ -1,0 +1,9 @@
+[Unit]
+Description=Node Exporter
+
+[Service]
+User=root
+ExecStart=/usr/sbin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
