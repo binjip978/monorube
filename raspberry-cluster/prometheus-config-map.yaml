@@ -17,6 +17,6 @@ data:
 
     scrape_configs:
       - job_name: 'raspberry-cluster'
-        scrape_interval: 300s
+        scrape_interval: 3600s
         static_configs:
           - targets: ['100.93.252.69:9100', '100.87.104.31:9100']
