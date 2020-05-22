@@ -37,3 +37,13 @@ func nonOverlapingSubset(intervals []interval) []interval {
 
 	return res
 }
+
+func substring(s string, p string) bool {
+	for i := 0; i < len(s)-len(p)+1; i++ {
+		if s[i:i+len(p)] == p {
+			return true
+		}
+	}
+
+	return false
+}

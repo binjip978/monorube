@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: prime
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:
@@ -14,7 +14,15 @@ spec:
     spec:
       containers:
       - name: prime-pod
-        image: binjip978/prime-service:0.1.0-dev
+        image: binjip978/prime-service:0.2.0-dev-arm32
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 20
+          failureThreshold: 3
         resources:
           limits:
             memory: "128Mi"
