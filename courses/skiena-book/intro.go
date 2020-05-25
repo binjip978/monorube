@@ -47,3 +47,17 @@ func substring(s string, p string) bool {
 
 	return false
 }
+
+func power(a int, n int) int {
+	if n == 0 {
+		return 1
+	}
+	if n == 1 {
+		return a
+	}
+	k := n / 2
+	if n%2 == 1 {
+		return a * power(a*a, k)
+	}
+	return power(a*a, k)
+}
