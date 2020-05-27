@@ -104,3 +104,20 @@ func primes(n int) []int {
 
 	return res
 }
+
+func incInteger(integer []int) []int {
+	carry := 1
+	for i := len(integer) - 1; i >= 0; i-- {
+		res := carry + integer[i]
+		if res <= 9 {
+			integer[i] = res
+			return integer
+		}
+		integer[i] = 0
+	}
+
+	// need carry on forward
+	newInteger := []int{1}
+	newInteger = append(newInteger, integer...)
+	return newInteger
+}
