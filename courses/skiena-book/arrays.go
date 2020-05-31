@@ -1,6 +1,10 @@
 package main
 
-import "math"
+import (
+	"math"
+	"math/rand"
+	"time"
+)
 
 func pivot(array []int, index int) {
 	array[0], array[index] = array[index], array[0]
@@ -120,4 +124,21 @@ func incInteger(integer []int) []int {
 	newInteger := []int{1}
 	newInteger = append(newInteger, integer...)
 	return newInteger
+}
+
+func sample(data []int, k int) []int {
+	var sample []int
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	l := len(data)
+	for i := 0; i < k; i++ {
+		p := r.Intn(l)
+		sample = append(sample, data[p])
+		data[l-1], data[p] = data[p], data[l-1]
+		l--
+		if l <= 0 {
+			return sample
+		}
+	}
+
+	return sample
 }
