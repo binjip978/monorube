@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -79,4 +80,87 @@ func parseInt(n int) (string, error) {
 	}
 
 	return rev, nil
+}
+
+// baseConversion 2 <= b1, b2 <= 16
+func baseConversion(n string, b1 int, b2 int) string {
+	// convert to base10
+	power := func(v int, p int) int {
+		return int(math.Pow(float64(v), float64(p)))
+	}
+	var d10 int
+	pi := 0
+	for i := len(n) - 1; i >= 0; i-- {
+		switch n[i] {
+		case '0':
+			d10 = 0
+		case '1':
+			d10 += 1 * power(b1, pi)
+		case '2':
+			d10 += 2 * power(b1, pi)
+		case '3':
+			d10 += 3 * power(b1, pi)
+		case '4':
+			d10 += 4 * power(b1, pi)
+		case '5':
+			d10 += 5 * power(b1, pi)
+		case '6':
+			d10 += 6 * power(b1, pi)
+		case '7':
+			d10 += 7 * power(b1, pi)
+		case '8':
+			d10 += 8 * power(b1, pi)
+		case '9':
+			d10 += 9 * power(b1, pi)
+		case 'A':
+			d10 += 10 * power(b1, pi)
+		case 'B':
+			d10 += 11 * power(b1, pi)
+		case 'C':
+			d10 += 12 * power(b1, pi)
+		case 'D':
+			d10 += 13 * power(b1, pi)
+		case 'E':
+			d10 += 14 * power(b1, pi)
+		case 'F':
+			d10 += 15 * power(b1, pi)
+		default:
+			panic("unknown symbols")
+		}
+		pi++
+	}
+	if d10 == 0 {
+		return "0"
+	}
+	converted := make([]byte, 0)
+
+	for d10 != 0 {
+		c := d10 % b2
+		switch c {
+		case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9:
+			converted = append(converted, byte(c)+48)
+		case 10:
+			converted = append(converted, 'A')
+		case 11:
+			converted = append(converted, 'B')
+		case 12:
+			converted = append(converted, 'C')
+		case 13:
+			converted = append(converted, 'D')
+		case 14:
+			converted = append(converted, 'E')
+		case 15:
+			converted = append(converted, 'F')
+		default:
+			panic("d2 is to big")
+		}
+		d10 /= b2
+	}
+
+	reverse := make([]byte, 0)
+	for i := len(converted) - 1; i >= 0; i-- {
+		reverse = append(reverse, converted[i])
+	}
+
+	return string(reverse)
 }
