@@ -3,5 +3,6 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println(baseConversion("16", 10, 16))
+	r, err := substringIndex("hello worl", "world")
+	fmt.Println(r, err)
 }

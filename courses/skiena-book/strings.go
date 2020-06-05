@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode"
 )
 
 func isPalindrome(s string) bool {
@@ -163,4 +164,48 @@ func baseConversion(n string, b1 int, b2 int) string {
 	}
 
 	return string(reverse)
+}
+
+func spreadsheet(code string) int {
+	var res, power int
+
+	for i := len(code) - 1; i >= 0; i-- {
+		res += int((code[i] - 64)) * int(math.Pow(26, float64(power)))
+		power++
+	}
+
+	return res
+}
+
+func isAlphaNumericPalindrome(str string) bool {
+	runes := []rune(str)
+	i, j := 0, len(runes)-1
+
+	for i < j {
+		if !(unicode.IsLetter(runes[i]) || unicode.IsNumber(runes[i])) {
+			i++
+			continue
+		}
+		if !(unicode.IsLetter(runes[j]) || unicode.IsNumber(runes[j])) {
+			j--
+			continue
+		}
+		if unicode.ToLower(runes[i]) != unicode.ToLower(runes[j]) {
+			return false
+		}
+		i++
+		j--
+	}
+
+	return true
+}
+
+func substringIndex(text string, pattern string) (int, error) {
+	for i := 0; i < len(text)-len(pattern)+1; i++ {
+		if text[i:i+len(pattern)] == pattern {
+			return i, nil
+		}
+	}
+
+	return 0, fmt.Errorf("no match")
 }
