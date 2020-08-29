@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -36,11 +37,22 @@ type Response struct {
 // ServiceStatus will return current service general info
 type ServiceStatus struct {
 	Hostname string `json:"hostname,omitempty"`
+	Uptime   int64  `json:"uptime,omitempty"`
 }
 
 func status() ServiceStatus {
 	hostname, _ := os.Hostname()
 	return ServiceStatus{Hostname: hostname}
+}
+
+func statusV2() ServiceStatus {
+	st := status()
+	info := syscall.Sysinfo_t{}
+	err := syscall.Sysinfo(&info)
+	if err == nil {
+		st.Uptime = info.Uptime
+	}
+	return st
 }
 
 func (r *Response) bytes() []byte {
@@ -54,6 +66,13 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 
 func serveStatus(w http.ResponseWriter, r *http.Request) {
 	st := status()
+	b, _ := json.Marshal(&st)
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
+}
+
+func serveStatusV2(w http.ResponseWriter, r *http.Request) {
+	st := statusV2()
 	b, _ := json.Marshal(&st)
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
@@ -82,6 +101,7 @@ func setupServer() *http.Server {
 	mux.HandleFunc("/healthz", healthz)
 	mux.HandleFunc("/prime", servePrime)
 	mux.HandleFunc("/status", serveStatus)
+	mux.HandleFunc("/v2/status", serveStatusV2)
 	mux.Handle("/metrics", promhttp.Handler())
 	srv := http.Server{
 		Addr:    ":8080",
