@@ -19,7 +19,7 @@ data:
       - job_name: 'raspberry-cluster'
         scrape_interval: 300s
         static_configs:
-          - targets: ['100.93.252.69:9100', '100.87.104.31:9100']
+          - targets: ['100.103.98.91:9100', '100.93.252.69:9100', '100.87.104.31:9100']
         metric_relabel_configs:
           - source_labels: ['node_thermal_zone_temp', 'node_load1']
             action: keep
