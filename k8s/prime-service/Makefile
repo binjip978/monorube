@@ -3,9 +3,8 @@ VERSION :=
 build: test
 	GOOS=linux go build
 
-
 test:
-	go test -cover ./...
+	test -cover ./...
 
 docker: build version
 	docker build . -t binjip978/prime-service:$(VERSION)
@@ -22,7 +21,7 @@ docker-push-arm32: version
 docker-arm32: build-arm32 version
 	docker build . -t binjip978/prime-service:$(VERSION)-arm32
 
-build-arm32: test
+build-arm32:
 	GOOS=linux GOARCH=arm go build
 
 clean:

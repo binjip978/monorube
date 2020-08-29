@@ -37,7 +37,7 @@ type Response struct {
 // ServiceStatus will return current service general info
 type ServiceStatus struct {
 	Hostname string `json:"hostname,omitempty"`
-	Uptime   int64  `json:"uptime,omitempty"`
+	Uptime   int    `json:"uptime,omitempty"`
 }
 
 func status() ServiceStatus {
@@ -50,7 +50,7 @@ func statusV2() ServiceStatus {
 	info := syscall.Sysinfo_t{}
 	err := syscall.Sysinfo(&info)
 	if err == nil {
-		st.Uptime = info.Uptime
+		st.Uptime = int(info.Uptime)
 	}
 	return st
 }
