@@ -1,0 +1,19 @@
+syntax = "proto3";
+package service;
+
+option go_package = ".;service";
+
+message PointRequest {
+  string id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  int32 z = 4;
+}
+
+message PointResponse {
+  string error = 1;
+}
+
+service Monitor {
+  rpc Point(PointRequest) returns (PointResponse) {}
+}
