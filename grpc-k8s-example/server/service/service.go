@@ -6,7 +6,6 @@ import (
 )
 
 type PointServer struct {
-
 }
 
 func (s *PointServer) Point(ctx context.Context, point *PointRequest) (*PointResponse, error) {

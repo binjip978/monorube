@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"google.golang.org/grpc"
 	"log"
 	"net"
-	"server/service"
+
+	"github.com/binjip978/monorube/grpc-k8s-example/server/service"
+	"google.golang.org/grpc"
 )
 
 type cfg struct {
