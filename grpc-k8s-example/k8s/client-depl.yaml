@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-example-client
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: grpc-example-client
+  template:
+    metadata:
+      labels:
+        app: grpc-example-client
+    spec:
+      containers:
+      - name: grpc-example-client
+        image: binjip978/grpc-example-client-arm7:0.0.1
+        args: ["-serverAddr=grpc-example-server:9000"]
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "125m"
+          limits:
+            memory: "32Mi"
+            cpu: "250m"
