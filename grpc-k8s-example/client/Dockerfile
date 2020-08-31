@@ -1,3 +1,9 @@
+FROM golang:1.15-alpine AS build
+WORKDIR /src
+COPY . .
+ARG GOARCH
+ARG GOARM
+RUN CGO_ENABLED=0 GOARCH=$GOARCH GOARM=$GOARM go build -o /build/client
 FROM alpine:3.12.0
-ADD client /bin/client
+COPY --from=build /build/client /bin/client
 ENTRYPOINT ["/bin/client"]
