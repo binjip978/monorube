@@ -15,6 +15,7 @@ spec:
       containers:
       - name: grpc-example-server
         image: binjip978/grpc-example-server-arm7:0.0.1
+        imagePullPolicy: Always
         resources:
           requests:
             memory: "64Mi"

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-pod
+  labels:
+    db: redis
+spec:
+  containers:
+  - name: redis-pod
+    image: arm32v7/redis:6.0.7-alpine
+    ports:
+      - containerPort: 6379
