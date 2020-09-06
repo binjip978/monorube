@@ -1,0 +1,13 @@
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: "raspberry-ingress"
+spec:
+  rules:
+    - host: pi4a.fleet
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: prometheus-service
+              servicePort: 9090
