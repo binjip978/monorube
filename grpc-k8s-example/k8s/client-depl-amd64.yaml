@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: grpc-example-client
 spec:
-  replicas: 5
+  replicas: 3
   selector:
     matchLabels:
       app: grpc-example-client
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: grpc-example-client
-        image: binjip978/grpc-example-client-arm7:0.0.1
+        image: binjip978/grpc-example-client-amd64:0.0.1
         args: ["-serverAddr=grpc-example-server:9000"]
         resources:
           requests:
