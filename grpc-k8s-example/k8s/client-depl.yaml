@@ -9,6 +9,8 @@ spec:
       app: grpc-example-client
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: grpc-example-client
     spec:

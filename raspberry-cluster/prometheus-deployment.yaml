@@ -11,6 +11,8 @@ spec:
       app: prometheus
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: prometheus
     spec:
