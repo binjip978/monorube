@@ -11,15 +11,3 @@ spec:
             backend: 
               serviceName: grpc-example-http-server
               servicePort: 8000
-          - path: /graph
-            backend:
-                serviceName: prometheus-service
-                servicePort: 9090
-          - path: /static
-            backend:
-                serviceName: prometheus-service
-                servicePort: 9090
-          - path: /api/v1
-            backend:
-                serviceName: prometheus-service
-                servicePort: 9090
