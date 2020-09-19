@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: prometheus
-        image: prom/prometheus-linux-armv7:v2.18.1
+        image: prom/prometheus-linux-armv7:v2.21.0
         args:
           - "--config.file=/etc/prometheus/prometheus.yml"
         ports:
@@ -26,6 +26,13 @@ spec:
         volumeMounts:
           - name: prometheus-config-volume
             mountPath: /etc/prometheus/
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
       volumes:
         - name: prometheus-config-volume
           configMap:
