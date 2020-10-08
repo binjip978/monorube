@@ -78,5 +78,21 @@ def skew(text):
 
     return res
 
+def hamming_distance(s1, s2):
+    d = 0
+    for e1, e2 in zip(s1, s2):
+        if e1 != e2:
+            d += 1
+    
+    return d
+
+def fuzzy_pattern_count(pattern, text, distance):
+    res = []
+    for i in range(len(text) - len(pattern) + 1):
+        if hamming_distance(text[i:i+len(pattern)], pattern) <= distance:
+            res.append(i)
+
+    return res
+
 if __name__ == '__main__':
     pass
