@@ -60,5 +60,23 @@ def clump(text, k, clump, times):
 
     return res
 
+def skew(text):
+    skew_pos = [0]
+    for i, e in enumerate(text, start=1):
+        if e == 'C':
+            skew_pos.append(skew_pos[i - 1] - 1)
+        elif e == 'G':
+            skew_pos.append(skew_pos[i - 1] + 1)
+        else:
+            skew_pos.append(skew_pos[i - 1])
+
+    res = []
+    m = min(skew_pos)
+    for i, e in enumerate(skew_pos):
+        if e == m:
+            res.append(i)
+
+    return res
+
 if __name__ == '__main__':
     pass
