@@ -94,8 +94,20 @@ def fuzzy_pattern_count(pattern, text, distance):
 
     return res
 
-def mutate(pattern, d):
-    def mutate1(xs, d):
+class FuzzSeq:
+    def __init__(self):
+        self._cache = {}
+    
+    def mutate(self, pattern, d):
+        if (pattern, d) in self._cache:
+            return self._cache[(pattern, d)]
+        
+        res = self._mutate1({pattern}, d)
+        self._cache[(pattern, d)] = res
+
+        return res
+        
+    def _mutate1(self, xs, d):
         if d == 0:
             return xs
         s = set()
@@ -119,15 +131,14 @@ def mutate(pattern, d):
                     s.add(w[0:i] + 'G' + w[i+1:])
 
         xs.update(s)
-        return mutate1(xs, d - 1)
-
-    return mutate1({pattern}, d)
+        return self._mutate1(xs, d - 1)
 
 def fuzzy_freq_words(text, k_size, distance):
+    f = FuzzSeq()
     words = Counter()
     for i in range(len(text) - k_size + 1):
         s = text[i:i+k_size]
-        mut = mutate(s, distance)
+        mut = f.mutate(s, distance)
         for m in mut:
             words[m] += 1
     
@@ -141,5 +152,6 @@ def fuzzy_freq_words(text, k_size, distance):
 
 
 if __name__ == '__main__':
-    res = mutate('ATCACGAATCAATTTCGGA', 5)
-    print(len(res))
+    text = 'CGCCCCACCGCAACGGGTGGCGACGGATCGGTCCCAAGGCGACGGATGCAACGGGTCGCCCCACCTTTTGTCTTGCAACGGGTGGCGACGGATGCAACGGGTCGCCCCACCGGCGACGGATTTTTGTCTTGGCGACGGATGGCGACGGATCGCCCCACCGCAACGGGTGGCGACGGATGGCGACGGATTTTTGTCTTTTTTGTCTTCGCCCCACCTTTTGTCTTTTTTGTCTTGCAACGGGTGCAACGGGTGGCGACGGATGGCGACGGATGGCGACGGATGCAACGGGTGGCGACGGATTTTTGTCTTCGCCCCACCCGGTCCCAACGGTCCCAATTTTGTCTTCGGTCCCAATTTTGTCTTGGCGACGGATCGCCCCACCCGCCCCACCTTTTGTCTTGGCGACGGATGGCGACGGATGGCGACGGATGCAACGGGTGGCGACGGATGGCGACGGATTTTTGTCTTTTTTGTCTTGGCGACGGATGCAACGGGTCGGTCCCAAGGCGACGGATGGCGACGGATGCAACGGGTCGCCCCACCCGGTCCCAACGGTCCCAAGCAACGGGTTTTTGTCTTCGGTCCCAATTTTGTCTTCGCCCCACCCGCCCCACCTTTTGTCTTCGCCCCACCGGCGACGGATCGGTCCCAACGCCCCACCTTTTGTCTTGCAACGGGTCGCCCCACCTTTTGTCTTCGGTCCCAATTTTGTCTTCGCCCCACCCGCCCCACCTTTTGTCTTGGCGACGGATTTTTGTCTTGCAACGGGTCGGTCCCAACGGTCCCAATTTTGTCTTGCAACGGGTCGGTCCCAAGCAACGGGTCGCCCCACCTTTTGTCTTGGCGACGGATTTTTGTCTTTTTTGTCTTGCAACGGGTCGCCCCACCCGCCCCACCTTTTGTCTTTTTTGTCTT'
+    res = fuzzy_freq_words(text, 7, 3)
+    print(" ".join(res))
