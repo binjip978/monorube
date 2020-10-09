@@ -94,5 +94,52 @@ def fuzzy_pattern_count(pattern, text, distance):
 
     return res
 
+def mutate(pattern, d):
+    def mutate1(xs, d):
+        if d == 0:
+            return xs
+        s = set()
+        for w in xs:
+            for i in range(len(w)):
+                if w[i] == 'A':
+                    s.add(w[0:i] + 'C' + w[i+1:])
+                    s.add(w[0:i] + 'T' + w[i+1:])
+                    s.add(w[0:i] + 'G' + w[i+1:])
+                if w[i] == 'C':
+                    s.add(w[0:i] + 'A' + w[i+1:])
+                    s.add(w[0:i] + 'T' + w[i+1:])
+                    s.add(w[0:i] + 'G' + w[i+1:])
+                if w[i] == 'T':
+                    s.add(w[0:i] + 'A' + w[i+1:])
+                    s.add(w[0:i] + 'C' + w[i+1:])
+                    s.add(w[0:i] + 'G' + w[i+1:])
+                if w[i] == 'G':
+                    s.add(w[0:i] + 'T' + w[i+1:])
+                    s.add(w[0:i] + 'C' + w[i+1:])
+                    s.add(w[0:i] + 'G' + w[i+1:])
+
+        xs.update(s)
+        return mutate1(xs, d - 1)
+
+    return mutate1({pattern}, d)
+
+def fuzzy_freq_words(text, k_size, distance):
+    words = Counter()
+    for i in range(len(text) - k_size + 1):
+        s = text[i:i+k_size]
+        mut = mutate(s, distance)
+        for m in mut:
+            words[m] += 1
+    
+    m = max(words.values())
+    res = []
+    for k, v in words.items():
+        if v == m:
+            res.append(k)
+    
+    return res
+
+
 if __name__ == '__main__':
-    pass
+    res = mutate('ATCACGAATCAATTTCGGA', 5)
+    print(len(res))
