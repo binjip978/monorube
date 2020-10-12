@@ -150,8 +150,28 @@ def fuzzy_freq_words(text, k_size, distance):
     
     return res
 
-
+def motif_enumeration(xs, k, d):
+    f = FuzzSeq()
+    res = set()
+    for seq in xs:
+        for i in range(len(seq) - k + 1):
+            cands = f.mutate(seq[i:i+k], d)
+            for cand in cands:
+                miss = False
+                for seq2 in xs:
+                    r = fuzzy_pattern_count(cand, seq2, d)
+                    if len(r) == 0:
+                        miss = True
+                        break
+                if not miss:
+                    res.add(cand)
+    
+    return res
+                
+                
 if __name__ == '__main__':
-    pattern = 'CACACCGCA'
-    res = FuzzSeq().mutate(pattern, 2)
-    print("\n".join(res))
+    lines = None
+    with open('input/rosalind_ba2a.txt', 'r') as f:
+        lines = f.readlines()
+    res = motif_enumeration(lines[1:], 5, 1)
+    print(" ".join(res))
