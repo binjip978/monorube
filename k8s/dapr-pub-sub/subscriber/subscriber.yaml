@@ -1,0 +1,43 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dapr-subscriber
+  labels:
+    app: dapr-subscriber
+spec:
+  selector:
+    app: dapr-subscriber
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 32000
+  type: NodePort
+ 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapr-subscriber
+  labels:
+    app: dapr-subscriber
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapr-subscriber
+  template:
+    metadata:
+      labels:
+        app: dapr-subscriber
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/id: "dapr-subscriber"
+        dapr.io/port: "8080"
+    spec:
+      containers:
+      - name: dapr-subscriber
+        image: binjip978/subscriber:0.0.1
+        ports:
+        - containerPort: 8080
+        imagePullPolicy: Never

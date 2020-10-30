@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapr-publisher
+  labels:
+    app: dapr-publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapr-publisher
+  template:
+    metadata:
+      labels:
+        app: dapr-publisher
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/id: "dapr-publisher"
+    spec:
+      containers:
+      - name: dapr-publisher
+        image: binjip978/publisher:0.0.1
