@@ -1,7 +1,0 @@
-Dockerfile
-.dockerignore
-.gitignore
-go.mod
-main.go
-main_test.go
-Makefile
