@@ -5,7 +5,7 @@ const int BUTTON = 2;
 
 boolean lastButton = LOW;
 boolean currentButton = LOW;
-boolean ledMode = 0;
+int ledMode = 0;
 
 
 void setup() {
@@ -16,16 +16,16 @@ void setup() {
 }
 
 void loop() {
-//  currentButton = debounce(lastButton);
-//  if (lastButton == LOW && currentButton == HIGH) {
-//    ledMode++;
-//  }
-//
-//  lastButton = currentButton;
-//  if (ledMode == 8) {
-//    ledMode = 0;
-//  }
-  setMode(3);
+  currentButton = debounce(lastButton);
+  if (lastButton == LOW && currentButton == HIGH) {
+    ledMode++;
+  }
+
+  lastButton = currentButton;
+  if (ledMode == 8) {
+    ledMode = 0;
+  }
+  setMode(ledMode);
 }
 
 boolean debounce(boolean last) {
