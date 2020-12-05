@@ -49,8 +49,7 @@ func (g grid) String() string {
 
 // problem 3a
 func countTrees(m grid, wd int, hd int) int {
-	cw, ch := 0, 0
-	var cnt int
+	var cw, ch, cnt int
 
 	for ch < m.height {
 		if m.g[ch][cw] == '#' {
@@ -69,6 +68,7 @@ type slope struct {
 	down  int
 }
 
+// problem 3b
 func countTrees2(m grid, slopes []slope) int {
 	prod := 1
 
@@ -144,6 +144,151 @@ func validPasswords2(xs []string) int {
 	return cnt
 }
 
+type password struct {
+	byr string
+	iyr string
+	eyr string
+	hgt string
+	hcl string
+	ecl string
+	pid string
+	cid string
+}
+
+func scanPasswords(filename string) []password {
+	var scanLine = func(line string, m map[string]string) map[string]string {
+		sp := strings.Split(line, " ")
+		for _, s := range sp {
+			fs := strings.Split(s, ":")
+			m[fs[0]] = fs[1]
+		}
+
+		return m
+	}
+
+	var pass = func(m map[string]string) password {
+		return password{
+			byr: m["byr"],
+			iyr: m["iyr"],
+			eyr: m["eyr"],
+			hgt: m["hgt"],
+			hcl: m["hcl"],
+			ecl: m["ecl"],
+			pid: m["pid"],
+			cid: m["cid"],
+		}
+	}
+
+	var passwords []password
+	lines := readLines(filename)
+
+	m1 := make(map[string]string)
+	for _, line := range lines {
+		if line == "" {
+			p := pass(m1)
+			passwords = append(passwords, p)
+			m1 = make(map[string]string)
+			continue
+		}
+		m1 = scanLine(line, m1)
+	}
+
+	return passwords
+}
+
+func valid(pass password) bool {
+	return pass.byr != "" && pass.ecl != "" && pass.eyr != "" && pass.hcl != "" &&
+		pass.hgt != "" && pass.iyr != "" && pass.pid != ""
+}
+
+func valid2(pass password) bool {
+	if pass.byr == "" {
+		return false
+	}
+	b, _ := strconv.Atoi(pass.byr)
+	if b < 1920 || b > 2002 {
+		return false
+	}
+
+	if pass.iyr == "" {
+		return false
+	}
+	i, _ := strconv.Atoi(pass.iyr)
+	if i < 2010 || i > 2020 {
+		return false
+	}
+
+	if pass.eyr == "" {
+		return false
+	}
+	e, _ := strconv.Atoi(pass.eyr)
+	if e < 2020 || e > 2030 {
+		return false
+	}
+
+	if pass.hgt == "" {
+		return false
+	}
+	if strings.Contains(pass.hgt, "cm") {
+		sp := strings.Split(pass.hgt, "cm")
+		h, _ := strconv.Atoi(sp[0])
+		if h < 150 || h > 193 {
+			return false
+		}
+	} else if strings.Contains(pass.hgt, "in") {
+		sp := strings.Split(pass.hgt, "in")
+		h, _ := strconv.Atoi(sp[0])
+		if h < 59 || h > 76 {
+			return false
+		}
+	} else {
+		return false
+	}
+
+	if len(pass.hcl) != 7 || pass.hcl[0] != '#' {
+		return false
+	}
+
+	for _, c := range pass.hcl[1:] {
+		switch c {
+		case 'a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		default:
+			return false
+		}
+	}
+
+	switch pass.ecl {
+	case "amb", "blu", "brn", "gry", "grn", "hzl", "oth":
+	default:
+		return false
+	}
+
+	if len(pass.pid) != 9 {
+		return false
+	}
+
+	for _, c := range pass.pid {
+		switch c {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		default:
+			return false
+		}
+	}
+
+	return true
+}
+
+func validCount(passwords []password) int {
+	var cnt int
+	for _, pass := range passwords {
+		if valid2(pass) {
+			cnt++
+		}
+	}
+
+	return cnt
+}
+
 func readList(filename string) []int {
 	b, _ := ioutil.ReadFile(filename)
 	r := bufio.NewReader(bytes.NewReader(b))
@@ -176,6 +321,6 @@ func readLines(filename string) []string {
 }
 
 func main() {
-	g := buildGrid("input/3.txt")
-	fmt.Println(countTrees2(g, []slope{{1, 1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}}))
+	passwords := scanPasswords("input/4.txt")
+	fmt.Println(validCount(passwords))
 }
