@@ -10,6 +10,75 @@ import (
 	"strings"
 )
 
+type grid struct {
+	g      [][]rune
+	width  int
+	height int
+}
+
+func buildGrid(filename string) grid {
+	var g grid
+
+	lines := readLines(filename)
+	for _, line := range lines {
+		var row []rune
+		for _, c := range line {
+			row = append(row, c)
+		}
+
+		g.g = append(g.g, row)
+	}
+
+	g.width = len(g.g[0])
+	g.height = len(g.g)
+	return g
+}
+
+func (g grid) String() string {
+	var buf bytes.Buffer
+
+	for _, row := range g.g {
+		for _, s := range row {
+			buf.WriteRune(s)
+		}
+		buf.WriteRune('\n')
+	}
+
+	return buf.String()
+}
+
+// problem 3a
+func countTrees(m grid, wd int, hd int) int {
+	cw, ch := 0, 0
+	var cnt int
+
+	for ch < m.height {
+		if m.g[ch][cw] == '#' {
+			cnt++
+		}
+		cw = (cw + wd) % m.width
+		ch += hd
+
+	}
+
+	return cnt
+}
+
+type slope struct {
+	right int
+	down  int
+}
+
+func countTrees2(m grid, slopes []slope) int {
+	prod := 1
+
+	for _, slope := range slopes {
+		prod *= countTrees(m, slope.right, slope.down)
+	}
+
+	return prod
+}
+
 // problem 1a
 func sum2(xs []int) int {
 	for i := 0; i < len(xs); i++ {
@@ -107,6 +176,6 @@ func readLines(filename string) []string {
 }
 
 func main() {
-	xs := readLines("input/2.txt")
-	fmt.Println(validPasswords2(xs))
+	g := buildGrid("input/3.txt")
+	fmt.Println(countTrees2(g, []slope{{1, 1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}}))
 }
