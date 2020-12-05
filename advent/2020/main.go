@@ -6,9 +6,42 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+func readList(filename string) []int {
+	b, _ := ioutil.ReadFile(filename)
+	r := bufio.NewReader(bytes.NewReader(b))
+	var res []int
+	for {
+		s, err := r.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		i, err := strconv.Atoi(s[:len(s)-1])
+		res = append(res, i)
+	}
+
+	return res
+}
+
+func readLines(filename string) []string {
+	b, _ := ioutil.ReadFile(filename)
+	r := bufio.NewReader(bytes.NewReader(b))
+	var res []string
+	for {
+		s, err := r.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		res = append(res, s[:len(s)-1])
+	}
+
+	return res
+}
 
 type grid struct {
 	g      [][]rune
@@ -289,38 +322,63 @@ func validCount(passwords []password) int {
 	return cnt
 }
 
-func readList(filename string) []int {
-	b, _ := ioutil.ReadFile(filename)
-	r := bufio.NewReader(bytes.NewReader(b))
-	var res []int
-	for {
-		s, err := r.ReadString('\n')
-		if err == io.EOF {
-			break
+func boarding(boardPass string) int {
+	first := boardPass[:7]
+	second := boardPass[7:]
+
+	cf := 0
+	power := 0
+	for i := 6; i >= 0; i-- {
+		if first[i] == 'B' {
+			cf += int(math.Pow(2.0, float64(power)))
 		}
-		i, err := strconv.Atoi(s[:len(s)-1])
-		res = append(res, i)
+		power++
 	}
 
-	return res
+	rf := 0
+	power = 0
+	for i := 2; i >= 0; i-- {
+		if second[i] == 'R' {
+			rf += int(math.Pow(2.0, float64(power)))
+		}
+		power++
+	}
+
+	return cf*8 + rf
 }
 
-func readLines(filename string) []string {
-	b, _ := ioutil.ReadFile(filename)
-	r := bufio.NewReader(bytes.NewReader(b))
-	var res []string
-	for {
-		s, err := r.ReadString('\n')
-		if err == io.EOF {
-			break
+func maxBoardPass(filename string) int {
+	lines := readLines(filename)
+	max := 0
+	for _, line := range lines {
+		r := boarding(line)
+		if r > max {
+			max = r
 		}
-		res = append(res, s[:len(s)-1])
 	}
+
+	return max
+}
+
+func boardIDs(filename string) []int {
+	lines := readLines(filename)
+	var res []int
+	for _, line := range lines {
+		r := boarding(line)
+		res = append(res, r)
+	}
+	sort.Ints(res)
 
 	return res
 }
 
 func main() {
-	passwords := scanPasswords("input/4.txt")
-	fmt.Println(validCount(passwords))
+	res := boardIDs("input/5.txt")
+	prev := res[0]
+	for i := 1; i < len(res); i++ {
+		if res[i]-1 != prev {
+			fmt.Println(res[i])
+		}
+		prev = res[i]
+	}
 }
