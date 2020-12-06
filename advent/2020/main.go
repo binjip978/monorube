@@ -360,7 +360,7 @@ func maxBoardPass(filename string) int {
 	return max
 }
 
-func boardIDs(filename string) []int {
+func boardIDs(filename string) {
 	lines := readLines(filename)
 	var res []int
 	for _, line := range lines {
@@ -368,17 +368,85 @@ func boardIDs(filename string) []int {
 		res = append(res, r)
 	}
 	sort.Ints(res)
-
-	return res
-}
-
-func main() {
-	res := boardIDs("input/5.txt")
 	prev := res[0]
 	for i := 1; i < len(res); i++ {
 		if res[i]-1 != prev {
-			fmt.Println(res[i])
+			fmt.Println(res[i] - 1)
+			return
 		}
 		prev = res[i]
 	}
+
+	fmt.Println("None")
+}
+
+// problem 6a/b
+func customs(filename string) int {
+	// var merge = func(line string, set map[rune]bool) map[rune]bool {
+	// 	for _, c := range line {
+	// 		set[c] = true
+	// 	}
+
+	// 	return set
+	// }
+
+	var create = func(line string) map[rune]bool {
+		set := make(map[rune]bool)
+
+		for _, c := range line {
+			set[c] = true
+		}
+
+		return set
+	}
+
+	var intersect = func(set1 map[rune]bool, set2 map[rune]bool) map[rune]bool {
+		nm := make(map[rune]bool)
+
+		for k, ok1 := range set1 {
+			_, ok2 := set2[k]
+			if ok1 && ok2 {
+				nm[k] = true
+			}
+		}
+
+		return nm
+	}
+
+	lines := readLines(filename)
+	var cnt int
+	first := true
+	set := make(map[rune]bool)
+
+	for _, line := range lines {
+		if line == "" {
+			for _, v := range set {
+				if v {
+					cnt++
+				}
+			}
+			set = make(map[rune]bool)
+			first = true
+			continue
+		}
+		newSet := create(line)
+		if first {
+			set = newSet
+			first = false
+		} else {
+			set = intersect(set, newSet)
+		}
+	}
+
+	for _, v := range set {
+		if v {
+			cnt++
+		}
+	}
+
+	return cnt
+}
+
+func main() {
+	fmt.Println(customs("input/6.txt"))
 }
