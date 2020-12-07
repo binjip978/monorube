@@ -447,6 +447,87 @@ func customs(filename string) int {
 	return cnt
 }
 
+// Problem 7 a/b
+
+type bagEdge struct {
+	to     string
+	amount int
+}
+
+type bagGraph struct {
+	g map[string][]bagEdge
+}
+
+func parseBagString(line string) (string, []bagEdge) {
+	var edges []bagEdge
+	s1 := strings.Split(line, "bags contain ")
+	from := s1[0]
+	if strings.Contains(s1[1], "no other bags") {
+		return from, edges
+	}
+
+	s2 := strings.Split(s1[1], ", ")
+
+	for _, s3 := range s2 {
+		s4 := strings.Split(s3, " ")
+		var edge bagEdge
+		c, _ := strconv.Atoi(s4[0])
+		edge.amount = c
+		edge.to = s4[1] + " " + s4[2]
+		edges = append(edges, edge)
+	}
+
+	return from, edges
+}
+
+func buildBagGraph(filename string) bagGraph {
+	bg := bagGraph{
+		g: make(map[string][]bagEdge),
+	}
+
+	lines := readLines(filename)
+	for _, line := range lines {
+		from, egs := parseBagString(line)
+		edges, ok := bg.g[from]
+		if !ok {
+			bg.g[from] = egs
+			continue
+		}
+		edges = append(edges, egs...)
+		bg.g[from] = edges
+	}
+
+	return bg
+}
+
+func buildInverseGraph(filename string) bagGraph {
+	bg := bagGraph{
+		g: make(map[string][]bagEdge),
+	}
+
+	lines := readLines(filename)
+	for _, line := range lines {
+		from, egs := parseBagString(line)
+		for _, e := range egs {
+			edges, ok := bg.g[e.to]
+			if !ok {
+				bg.g[e.to] = []bagEdge{{from, e.amount}}
+				continue
+			}
+			edges = append(edges, bagEdge{from, e.amount})
+			bg.g[e.to] = edges
+		}
+	}
+
+	return bg
+}
+
+func outmostShinyGold(g bagGraph) int {
+	return 42
+}
+
 func main() {
-	fmt.Println(customs("input/6.txt"))
+	g := buildInverseGraph("input/debug.txt")
+	// fmt.Printf("%+v\n", g.g)
+	fmt.Printf("%+v\n", g.g["muted yellow"])
 }
