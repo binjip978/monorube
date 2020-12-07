@@ -461,7 +461,7 @@ type bagGraph struct {
 func parseBagString(line string) (string, []bagEdge) {
 	var edges []bagEdge
 	s1 := strings.Split(line, "bags contain ")
-	from := s1[0]
+	from := strings.TrimSpace(s1[0])
 	if strings.Contains(s1[1], "no other bags") {
 		return from, edges
 	}
@@ -473,7 +473,7 @@ func parseBagString(line string) (string, []bagEdge) {
 		var edge bagEdge
 		c, _ := strconv.Atoi(s4[0])
 		edge.amount = c
-		edge.to = s4[1] + " " + s4[2]
+		edge.to = strings.TrimSpace(s4[1] + " " + s4[2])
 		edges = append(edges, edge)
 	}
 
@@ -523,11 +523,30 @@ func buildInverseGraph(filename string) bagGraph {
 }
 
 func outmostShinyGold(g bagGraph) int {
-	return 42
+	frontier := []string{"shiny gold"}
+
+	visited := make(map[string]bool)
+
+	for len(frontier) != 0 {
+		f := frontier[len(frontier)-1]
+		frontier = frontier[:len(frontier)-1]
+		ff, _ := g.g[f]
+		for _, n := range ff {
+			_, ok := visited[n.to]
+			if ok {
+				continue
+			}
+			frontier = append(frontier, n.to)
+		}
+		visited[f] = true
+	}
+
+	return len(visited) - 1
 }
 
 func main() {
-	g := buildInverseGraph("input/debug.txt")
-	// fmt.Printf("%+v\n", g.g)
-	fmt.Printf("%+v\n", g.g["muted yellow"])
+	g := buildInverseGraph("input/7.txt")
+	// fmt.Printf("%+v\n", g)
+	// fmt.Println(g.g["shiny gold"])
+	fmt.Println(outmostShinyGold(g))
 }
