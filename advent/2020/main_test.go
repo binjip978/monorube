@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -29,17 +29,17 @@ func TestBagParser(t *testing.T) {
 		{
 			"muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.",
 			"muted yellow",
-			[]bagEdge{{"shiny gold", 2}, {"faded blue bags", 9}},
+			[]bagEdge{{"shiny gold", 2}, {"faded blue", 9}},
 		},
 		{
 			"shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.",
 			"shiny gold",
-			[]bagEdge{{"dark olive", 2}, {"vibrant plum", 2}},
+			[]bagEdge{{"dark olive", 1}, {"vibrant plum", 2}},
 		},
 		{
 			"dark olive bags contain 3 faded blue bags, 4 dotted black bags.",
 			"dark olive",
-			[]bagEdge{{"faded blue", 4}, {"dotted black", 2}},
+			[]bagEdge{{"faded blue", 3}, {"dotted black", 4}},
 		},
 		{
 			"vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.",
@@ -49,16 +49,19 @@ func TestBagParser(t *testing.T) {
 		{
 			"faded blue bags contain no other bags.",
 			"faded blue",
-			[]bagEdge{},
+			nil,
 		},
 		{
 			"dotted black bags contain no other bags.",
 			"dotted black",
-			[]bagEdge{},
+			nil,
 		},
 	}
 
-	for _, tt := range cases {
-		fmt.Println(tt.input)
+	for i, tt := range cases {
+		from, e := parseBagString(tt.input)
+		if from != tt.from || !reflect.DeepEqual(tt.to, e) {
+			t.Errorf("error in case %d", i)
+		}
 	}
 }

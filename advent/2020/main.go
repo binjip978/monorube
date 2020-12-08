@@ -500,7 +500,7 @@ func buildBagGraph(filename string) bagGraph {
 	return bg
 }
 
-func buildInverseGraph(filename string) bagGraph {
+func buildInverseBagGraph(filename string) bagGraph {
 	bg := bagGraph{
 		g: make(map[string][]bagEdge),
 	}
@@ -544,9 +544,21 @@ func outmostShinyGold(g bagGraph) int {
 	return len(visited) - 1
 }
 
+func bagGraphContains(g bagGraph, node string) int {
+	edges := g.g[node]
+	if len(edges) == 0 {
+		return 0
+	}
+
+	var cnt int
+	for _, e := range edges {
+		cnt = cnt + e.amount + e.amount*bagGraphContains(g, e.to)
+	}
+
+	return cnt
+}
+
 func main() {
-	g := buildInverseGraph("input/7.txt")
-	// fmt.Printf("%+v\n", g)
-	// fmt.Println(g.g["shiny gold"])
-	fmt.Println(outmostShinyGold(g))
+	g := buildBagGraph("input/7.txt")
+	fmt.Println(bagGraphContains(g, "shiny gold"))
 }
