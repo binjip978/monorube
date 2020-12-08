@@ -558,7 +558,84 @@ func bagGraphContains(g bagGraph, node string) int {
 	return cnt
 }
 
+// problem 8
+
+type instr struct {
+	op      string
+	operand int
+}
+
+func code(filename string) []instr {
+	lines := readLines(filename)
+	var c []instr
+	for _, line := range lines {
+		sp := strings.Split(line, " ")
+		v, _ := strconv.Atoi(sp[1])
+		c = append(c, instr{sp[0], v})
+	}
+
+	return c
+}
+
+func execute(cs []instr) (int, bool) {
+	var acc int
+	var ip int
+	visisted := make(map[int]bool)
+
+	for ip != len(cs) {
+		_, ok := visisted[ip]
+		if ok {
+			return acc, false
+		}
+
+		next := cs[ip]
+		visisted[ip] = true
+		switch next.op {
+		case "nop":
+			ip++
+		case "acc":
+			acc += next.operand
+			ip++
+		case "jmp":
+			ip += next.operand
+		default:
+			panic("AAAAAAA!!!!!")
+		}
+	}
+
+	return acc, true
+}
+
+func fixBootloader(cs []instr) int {
+	for i, ins := range cs {
+		if ins.op == "jmp" {
+			css := make([]instr, len(cs))
+			copy(css, cs)
+			css[i].op = "nop"
+			r, s := execute(css)
+			if s {
+				return r
+			}
+			continue
+		}
+		if ins.op == "nop" {
+			css := make([]instr, len(cs))
+			copy(css, cs)
+			css[i].op = "jmp"
+			r, s := execute(css)
+			if s {
+				return r
+			}
+			continue
+
+		}
+	}
+
+	panic("AAAA")
+	return 42
+}
+
 func main() {
-	g := buildBagGraph("input/7.txt")
-	fmt.Println(bagGraphContains(g, "shiny gold"))
+	cs := code("input/8.txt")
+	fmt.Println(fixBootloader(cs))
 }
