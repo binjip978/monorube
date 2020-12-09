@@ -635,7 +635,66 @@ func fixBootloader(cs []instr) int {
 	return 42
 }
 
+// problem 9
+func nonSum(size int, filename string) int {
+	ns := readList(filename)
+	m := make(map[int]bool)
+
+	for i := 0; i < size; i++ {
+		m[ns[i]] = true
+	}
+
+	for i := size; i < len(ns); i++ {
+		cand := ns[i]
+		var hit bool
+		for j := i - size; j < i; j++ {
+			_, ok := m[cand-ns[j]]
+			if ok {
+				hit = true
+				continue
+			}
+		}
+		if !hit {
+			return cand
+		}
+		d := ns[i-size]
+		delete(m, d)
+		m[cand] = false
+	}
+
+	panic("AAAAA!!! can't break it!!!")
+}
+
+func contiguousSum(filename string, cand int) int {
+	ns := readList(filename)
+	for i := 0; i < len(ns); i++ {
+		var acc int
+		for j := i; j < len(ns); j++ {
+			if acc == cand {
+				min := ns[i]
+				max := ns[i]
+				for z := i + 1; z < j; z++ {
+					if ns[z] < min {
+						min = ns[z]
+					}
+					if ns[z] > max {
+						max = ns[z]
+					}
+				}
+
+				return min + max
+			}
+			if acc > cand {
+				break
+			}
+			acc += ns[j]
+		}
+	}
+
+	panic("AAAAAA!!!")
+}
+
 func main() {
-	cs := code("input/8.txt")
-	fmt.Println(fixBootloader(cs))
+	cs := contiguousSum("input/9.txt", 85848519)
+	fmt.Println(cs)
 }
