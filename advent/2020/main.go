@@ -717,7 +717,38 @@ func diff(filename string) int {
 	return cnt1 * cnt3
 }
 
+func arrangements(filename string) int {
+	jolts := readList(filename)
+	sort.Ints(jolts)
+	jolts = append([]int{0}, jolts...)
+	jolts = append(jolts, jolts[len(jolts)-1]+3)
+	memo := make(map[int]int)
+
+	return rec(0, jolts, memo)
+}
+
+func rec(i int, jolts []int, memo map[int]int) int {
+	r, ok := memo[i]
+	if ok {
+		return r
+	}
+
+	if i == len(jolts)-1 {
+		return 1
+	}
+	var cnt int
+
+	for j := 1; j <= 3; j++ {
+		if i+j < len(jolts) && jolts[i+j]-jolts[i] <= 3 {
+			cnt += rec(i+j, jolts, memo)
+		}
+	}
+
+	memo[i] = cnt
+	return cnt
+}
+
 func main() {
-	res := diff("input/10.txt")
+	res := arrangements("input/10.txt")
 	fmt.Println(res)
 }
