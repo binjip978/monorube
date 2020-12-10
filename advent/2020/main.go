@@ -694,7 +694,30 @@ func contiguousSum(filename string, cand int) int {
 	panic("AAAAAA!!!")
 }
 
+// problem 10
+
+func diff(filename string) int {
+	jolts := readList(filename)
+	sort.Ints(jolts)
+	var curr, cnt1, cnt3 int
+
+	for _, j := range jolts {
+		d := j - curr
+		if d == 1 {
+			cnt1++
+		}
+		if d == 3 {
+			cnt3++
+		}
+		curr = j
+	}
+
+	cnt3++ // device
+
+	return cnt1 * cnt3
+}
+
 func main() {
-	cs := contiguousSum("input/9.txt", 85848519)
-	fmt.Println(cs)
+	res := diff("input/10.txt")
+	fmt.Println(res)
 }
