@@ -787,7 +787,7 @@ func (s *SeatModel) move() bool {
 		for x := 0; x < s.width; x++ {
 			switch s.grid[y][x] {
 			case 'L':
-				n := s.pos(x, y)
+				n := s.pos1(x, y)
 				occ := false
 				for _, n1 := range n {
 					if s.grid[n1.y][n1.x] == '#' {
@@ -800,14 +800,14 @@ func (s *SeatModel) move() bool {
 					cp[y][x] = '#'
 				}
 			case '#':
-				n := s.pos(x, y)
+				n := s.pos1(x, y)
 				occCnt := 0
 				for _, n1 := range n {
 					if s.grid[n1.y][n1.x] == '#' {
 						occCnt++
 					}
 				}
-				if occCnt >= 4 {
+				if occCnt >= 5 {
 					change = true
 					cp[y][x] = 'L'
 				}
@@ -836,6 +836,150 @@ func (s *SeatModel) pos(x int, y int) []pos {
 			if in(x+i, y+j) {
 				res = append(res, pos{x + i, y + j})
 			}
+		}
+	}
+
+	return res
+}
+
+func (s *SeatModel) pos1(x int, y int) []pos {
+	// x width y height
+	var in = func(xi int, yi int) bool {
+		return xi >= 0 && xi < s.width && yi >= 0 && yi < s.height
+	}
+
+	var res []pos
+	var cx, cy int
+
+	// 1) -1, -1
+	cx = x
+	cy = y
+	for {
+		cx = cx - 1
+		cy = cy - 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 2) -1, 0
+	cx = x
+	cy = y
+	for {
+		cx = cx - 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 3) -1, +1
+	cx = x
+	cy = y
+	for {
+		cx = cx - 1
+		cy = cy + 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 4) 0, -1
+	cx = x
+	cy = y
+	for {
+		cy = cy - 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 5) 0, +1
+	cx = x
+	cy = y
+	for {
+		cy = cy + 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 6) 1, -1
+	cx = x
+	cy = y
+	for {
+		cx = cx + 1
+		cy = cy - 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 7) 1, 0
+	cx = x
+	cy = y
+	for {
+		cx = cx + 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
+		}
+	}
+
+	// 8) +1, +1
+	cx = x
+	cy = y
+	for {
+		cx = cx + 1
+		cy = cy + 1
+
+		if !in(cx, cy) {
+			break
+		}
+
+		if s.grid[cy][cx] == 'L' || s.grid[cy][cx] == '#' {
+			res = append(res, pos{cx, cy})
+			break
 		}
 	}
 
@@ -879,4 +1023,5 @@ func (s *SeatModel) simulate() int {
 func main() {
 	g := NewSeatModel("input/11.txt")
 	fmt.Println(g.simulate())
+
 }
