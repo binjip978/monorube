@@ -748,7 +748,135 @@ func rec(i int, jolts []int, memo map[int]int) int {
 	return cnt
 }
 
+// problem 11
+
+type SeatModel struct {
+	grid   [][]rune
+	width  int
+	height int
+}
+
+func (s *SeatModel) String() string {
+	var buf bytes.Buffer
+	for _, line := range s.grid {
+		for _, s := range line {
+			buf.WriteRune(s)
+		}
+		buf.WriteRune('\n')
+	}
+
+	return buf.String()
+}
+
+type pos struct {
+	x int
+	y int
+}
+
+func (s *SeatModel) move() bool {
+	var cp [][]rune
+	for _, l := range s.grid {
+		c := make([]rune, len(l))
+		copy(c, l)
+		cp = append(cp, c)
+	}
+
+	var change bool
+
+	for y := 0; y < s.height; y++ {
+		for x := 0; x < s.width; x++ {
+			switch s.grid[y][x] {
+			case 'L':
+				n := s.pos(x, y)
+				occ := false
+				for _, n1 := range n {
+					if s.grid[n1.y][n1.x] == '#' {
+						occ = true
+						break
+					}
+				}
+				if !occ {
+					change = true
+					cp[y][x] = '#'
+				}
+			case '#':
+				n := s.pos(x, y)
+				occCnt := 0
+				for _, n1 := range n {
+					if s.grid[n1.y][n1.x] == '#' {
+						occCnt++
+					}
+				}
+				if occCnt >= 4 {
+					change = true
+					cp[y][x] = 'L'
+				}
+			}
+		}
+	}
+
+	s.grid = cp
+	return change
+}
+
+func (s *SeatModel) pos(x int, y int) []pos {
+	// x width y height
+	var in = func(xi int, yi int) bool {
+		return xi >= 0 && xi < s.width && yi >= 0 && yi < s.height
+	}
+
+	var res []pos
+
+	for i := -1; i <= 1; i++ {
+		for j := -1; j <= 1; j++ {
+			if i == 0 && j == 0 {
+				continue
+			}
+
+			if in(x+i, y+j) {
+				res = append(res, pos{x + i, y + j})
+			}
+		}
+	}
+
+	return res
+}
+
+func NewSeatModel(filename string) *SeatModel {
+	var grid [][]rune
+	lines := readLines(filename)
+	for _, line := range lines {
+		var g []rune
+		for _, c := range line {
+			g = append(g, c)
+		}
+		grid = append(grid, g)
+	}
+
+	return &SeatModel{
+		grid:   grid,
+		height: len(grid),
+		width:  len(grid[0]),
+	}
+}
+
+func (s *SeatModel) simulate() int {
+	for s.move() {
+	}
+
+	var cnt int
+	for y := 0; y < s.height; y++ {
+		for x := 0; x < s.width; x++ {
+			if s.grid[y][x] == '#' {
+				cnt++
+			}
+		}
+	}
+
+	return cnt
+}
+
 func main() {
-	res := arrangements("input/10.txt")
-	fmt.Println(res)
+	g := NewSeatModel("input/11.txt")
+	fmt.Println(g.simulate())
 }
