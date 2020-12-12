@@ -1020,8 +1020,137 @@ func (s *SeatModel) simulate() int {
 	return cnt
 }
 
-func main() {
-	g := NewSeatModel("input/11.txt")
-	fmt.Println(g.simulate())
+// problem 12
 
+type shipCMD struct {
+	action string
+	value  int
+}
+
+func parseShipCMD(filename string) []shipCMD {
+	lines := readLines(filename)
+	var cmds []shipCMD
+	for _, line := range lines {
+		v, _ := strconv.Atoi(line[1:])
+		cmds = append(cmds, shipCMD{line[0:1], v})
+	}
+
+	return cmds
+}
+
+type cruiseShip struct {
+	cmds []shipCMD
+	dir  string
+	we   int
+	ns   int
+}
+
+func (s *cruiseShip) exec() float64 {
+	for _, cmd := range s.cmds {
+		switch cmd.action {
+		case "N":
+			s.ns += cmd.value
+		case "S":
+			s.ns -= cmd.value
+		case "W":
+			s.we += cmd.value
+		case "E":
+			s.we -= cmd.value
+		case "L":
+			r := cmd.value
+			for r != 0 {
+				switch s.dir {
+				case "N":
+					s.dir = "W"
+				case "W":
+					s.dir = "S"
+				case "S":
+					s.dir = "E"
+				case "E":
+					s.dir = "N"
+				}
+				r -= 90
+			}
+		case "R":
+			r := cmd.value
+			for r != 0 {
+				switch s.dir {
+				case "N":
+					s.dir = "E"
+				case "W":
+					s.dir = "N"
+				case "S":
+					s.dir = "W"
+				case "E":
+					s.dir = "S"
+				}
+				r -= 90
+			}
+		case "F":
+			switch s.dir {
+			case "N":
+				s.ns += cmd.value
+			case "S":
+				s.ns -= cmd.value
+			case "W":
+				s.we += cmd.value
+			case "E":
+				s.we -= cmd.value
+			}
+		}
+	}
+
+	return math.Abs(float64(s.we)) + math.Abs(float64(s.ns))
+}
+
+type cruiseShip2 struct {
+	cmds         []shipCMD
+	shipLocEast  int
+	shipLocNorth int
+	pointEast    int
+	pointNorth   int
+}
+
+func (s *cruiseShip2) exec() float64 {
+	for _, cmd := range s.cmds {
+		switch cmd.action {
+		case "N":
+			s.pointNorth += cmd.value
+		case "S":
+			s.pointNorth -= cmd.value
+		case "W":
+			s.pointEast -= cmd.value
+		case "E":
+			s.pointEast += cmd.value
+		case "L":
+			switch cmd.value {
+			case 90:
+				s.pointEast, s.pointNorth = -s.pointNorth, s.pointEast
+			case 180:
+				s.pointEast, s.pointNorth = -s.pointEast, -s.pointNorth
+			case 270:
+				s.pointEast, s.pointNorth = s.pointNorth, -s.pointEast
+			}
+		case "R":
+			switch cmd.value {
+			case 90:
+				s.pointEast, s.pointNorth = s.pointNorth, -s.pointEast
+			case 180:
+				s.pointEast, s.pointNorth = -s.pointEast, -s.pointNorth
+			case 270:
+				s.pointEast, s.pointNorth = -s.pointNorth, s.pointEast
+			}
+		case "F":
+			s.shipLocEast += cmd.value * s.pointEast
+			s.shipLocNorth += cmd.value * s.pointNorth
+		}
+	}
+
+	return math.Abs(float64(s.shipLocEast)) + math.Abs(float64(s.shipLocNorth))
+}
+
+func main() {
+	cmds := parseShipCMD("input/12.txt")
+	sh := &cruiseShip2{cmds, 0, 0, 10, 1}
+	fmt.Println(sh.exec())
 }
