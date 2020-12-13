@@ -1149,8 +1149,77 @@ func (s *cruiseShip2) exec() float64 {
 	return math.Abs(float64(s.shipLocEast)) + math.Abs(float64(s.shipLocNorth))
 }
 
+// problem 13
+
+func firstBus(time int, periods []int) int {
+	type rec struct {
+		id        int
+		startTime int
+	}
+
+	var recs []rec
+
+	for _, p := range periods {
+		d := time / p
+		recs = append(recs, rec{p, d*p + p})
+	}
+
+	recMin := recs[0]
+
+	for i := 1; i < len(recs); i++ {
+		if recs[i].startTime < recMin.startTime {
+			recMin = recs[i]
+		}
+	}
+
+	return (recMin.startTime - time) * recMin.id
+}
+
+func prepareBus(filename string) (int, []int) {
+	lines := readLines(filename)
+	var ids []int
+	sp := strings.Split(lines[1], ",")
+	for _, s := range sp {
+		if s == "x" {
+			ids = append(ids, 0)
+		}
+		v, _ := strconv.Atoi(s)
+		ids = append(ids, v)
+	}
+
+	t, _ := strconv.Atoi(lines[0])
+	return t, ids
+}
+
+func timestampBF(ids []int) int {
+	first := ids[0]
+	for i := 500000000000000; i < math.MaxInt64; i++ {
+		if i%1000000000 == 0 {
+			fmt.Println(i)
+		}
+		if i%first == 0 {
+			currTimestamp := i
+			var fail bool
+			for j := 1; j < len(ids); j++ {
+				currTimestamp++
+				if ids[j] == 0 {
+					continue
+				}
+				if currTimestamp%ids[j] != 0 {
+					fail = true
+					break
+				}
+			}
+			if !fail {
+				return i
+			}
+		}
+	}
+
+	panic("AAAAA!!!")
+}
+
 func main() {
-	cmds := parseShipCMD("input/12.txt")
-	sh := &cruiseShip2{cmds, 0, 0, 10, 1}
-	fmt.Println(sh.exec())
+	_, ids := prepareBus("input/13.txt")
+	fmt.Println(timestampBF(ids))
 }
