@@ -1219,7 +1219,46 @@ func timestampBF(ids []int) int {
 	panic("AAAAA!!!")
 }
 
+// problem 14
+
+func dockingSum(filename string) int {
+	var mask string
+	mem := make(map[int]int)
+
+	lines := readLines(filename)
+	for _, line := range lines {
+		switch line[:3] {
+		case "mas":
+			sp := strings.Split(line, " = ")
+			mask = sp[1]
+		case "mem":
+			sp := strings.Split(line, "] = ")
+			sid := strings.Split(sp[0], "mem[")
+			id, _ := strconv.Atoi(sid[1])
+			value, _ := strconv.Atoi(sp[1])
+			for i := 35; i >= 0; i-- {
+				d := 35 - i
+				if mask[i] == '1' {
+					m := 1 << d
+					value = value | m
+				}
+				if mask[i] == '0' {
+					m := -1 ^ (1 << d)
+					value = value & m
+				}
+			}
+			mem[id] = value
+		}
+	}
+
+	var res int
+	for _, v := range mem {
+		res += v
+	}
+
+	return res
+}
+
 func main() {
-	_, ids := prepareBus("input/13.txt")
-	fmt.Println(timestampBF(ids))
+	fmt.Println(dockingSum("input/14.txt"))
 }
