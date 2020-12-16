@@ -1327,6 +1327,32 @@ func allMem(xs []string) []string {
 	return xs
 }
 
+// problem 15
+
+func elvesGame(numbers []int) int {
+	named := make(map[int]int)
+	for i := 0; i < len(numbers)-1; i++ {
+		named[numbers[i]] = i + 1
+	}
+	lastNumber := numbers[len(numbers)-1]
+	turn := len(numbers)
+
+	for turn != 30000000 {
+		p, ok := named[lastNumber]
+		if ok {
+			diff := turn - p
+			named[lastNumber] = turn
+			lastNumber = diff
+		} else {
+			named[lastNumber] = turn
+			lastNumber = 0
+		}
+		turn++
+	}
+
+	return lastNumber
+}
+
 func main() {
-	fmt.Println(dockingSum2("input/14.txt"))
+	fmt.Println(elvesGame([]int{6, 19, 0, 5, 7, 13, 1}))
 }
