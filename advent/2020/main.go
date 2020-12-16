@@ -1259,6 +1259,74 @@ func dockingSum(filename string) int {
 	return res
 }
 
+func dockingSum2(filename string) int {
+	var mask string
+	mem := make(map[int64]int)
+
+	lines := readLines(filename)
+	for _, line := range lines {
+		switch line[:3] {
+		case "mas":
+			sp := strings.Split(line, " = ")
+			mask = sp[1]
+		case "mem":
+			sp := strings.Split(line, "] = ")
+			sid := strings.Split(sp[0], "mem[")
+			id, _ := strconv.Atoi(sid[1])
+			value, _ := strconv.Atoi(sp[1])
+			var b bytes.Buffer
+			for i := 0; i < 36; i++ {
+				switch mask[i] {
+				case 'X':
+					b.WriteRune('X')
+				case '0':
+					r := 1 & (id >> (35 - i))
+					if r == 0 {
+						b.WriteRune('0')
+					} else {
+						b.WriteRune('1')
+					}
+				case '1':
+					b.WriteRune('1')
+				}
+			}
+
+			memAddrs := allMem([]string{b.String()})
+
+			for _, addr := range memAddrs {
+				a, _ := strconv.ParseInt(addr, 2, 64)
+				mem[a] = value
+			}
+		}
+	}
+
+	var res int
+	for _, v := range mem {
+		res += v
+	}
+
+	return res
+}
+
+func allMem(xs []string) []string {
+	var xxs []string
+	done := true
+	for _, x := range xs {
+		if strings.Contains(x, "X") {
+			done = false
+			i := strings.Index(x, "X")
+			xxs = append(xxs, x[0:i]+"0"+x[i+1:])
+			xxs = append(xxs, x[0:i]+"1"+x[i+1:])
+		}
+	}
+
+	if !done {
+		return allMem(xxs)
+	}
+
+	return xs
+}
+
 func main() {
-	fmt.Println(dockingSum("input/14.txt"))
+	fmt.Println(dockingSum2("input/14.txt"))
 }
