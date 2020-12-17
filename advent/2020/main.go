@@ -1538,8 +1538,186 @@ func (t *trainProblem) mapping() int {
 	return cnt
 }
 
+// problem 17
+
+type zp struct {
+	x int
+	y int
+	z int
+}
+
+func (p zp) nboors() []zp {
+	var n []zp
+	for i := -1; i <= 1; i++ {
+		for j := -1; j <= 1; j++ {
+			for k := -1; k <= 1; k++ {
+				if i == 0 && j == 0 && k == 0 {
+					continue
+				}
+				n = append(n, zp{p.x + i, p.y + j, p.z + k})
+			}
+		}
+	}
+
+	return n
+}
+
+func initZP(filename string) []zp {
+	var n []zp
+	lines := readLines(filename)
+	for i := 0; i < len(lines); i++ {
+		for j := 0; j < len(lines[0]); j++ {
+			if lines[i][j] == '#' {
+				n = append(n, zp{i, j, 0})
+			}
+		}
+	}
+
+	return n
+}
+
+func simulate(xs []zp) int {
+	univ := make(map[zp]rune)
+	for _, n := range xs {
+		univ[n] = '#'
+	}
+
+	for i := 0; i < 6; i++ {
+		cand := make(map[zp]bool)
+		for z := range univ {
+			nb := z.nboors()
+			for _, b := range nb {
+				cand[b] = true
+			}
+		}
+		newUniv := make(map[zp]rune)
+
+		for c := range cand {
+			_, active := univ[c]
+			if active {
+				nb := c.nboors()
+				var cnt int
+				for _, n := range nb {
+					_, ok := univ[n]
+					if ok {
+						cnt++
+					}
+				}
+				if cnt == 2 || cnt == 3 {
+					newUniv[c] = '#'
+				}
+			} else {
+				nb := c.nboors()
+				var cnt int
+				for _, n := range nb {
+					_, ok := univ[n]
+					if ok {
+						cnt++
+					}
+				}
+				if cnt == 3 {
+					newUniv[c] = '#'
+				}
+			}
+		}
+
+		univ = newUniv
+	}
+
+	return len(univ)
+}
+
+type zwp struct {
+	x int
+	y int
+	z int
+	w int
+}
+
+func (p zwp) nboors() []zwp {
+	var n []zwp
+	for i := -1; i <= 1; i++ {
+		for j := -1; j <= 1; j++ {
+			for k := -1; k <= 1; k++ {
+				for l := -1; l <= 1; l++ {
+					if i == 0 && j == 0 && k == 0 && l == 0 {
+						continue
+					}
+					n = append(n, zwp{p.x + i, p.y + j, p.z + k, p.w + l})
+				}
+			}
+		}
+	}
+
+	return n
+}
+
+func initZWP(filename string) []zwp {
+	var n []zwp
+	lines := readLines(filename)
+	for i := 0; i < len(lines); i++ {
+		for j := 0; j < len(lines[0]); j++ {
+			if lines[i][j] == '#' {
+				n = append(n, zwp{i, j, 0, 0})
+			}
+		}
+	}
+
+	return n
+}
+
+func simulate2(xs []zwp) int {
+	univ := make(map[zwp]rune)
+	for _, n := range xs {
+		univ[n] = '#'
+	}
+
+	for i := 0; i < 6; i++ {
+		cand := make(map[zwp]bool)
+		for z := range univ {
+			nb := z.nboors()
+			for _, b := range nb {
+				cand[b] = true
+			}
+		}
+		newUniv := make(map[zwp]rune)
+
+		for c := range cand {
+			_, active := univ[c]
+			if active {
+				nb := c.nboors()
+				var cnt int
+				for _, n := range nb {
+					_, ok := univ[n]
+					if ok {
+						cnt++
+					}
+				}
+				if cnt == 2 || cnt == 3 {
+					newUniv[c] = '#'
+				}
+			} else {
+				nb := c.nboors()
+				var cnt int
+				for _, n := range nb {
+					_, ok := univ[n]
+					if ok {
+						cnt++
+					}
+				}
+				if cnt == 3 {
+					newUniv[c] = '#'
+				}
+			}
+		}
+
+		univ = newUniv
+	}
+
+	return len(univ)
+}
+
 func main() {
-	tp := newTrainProblem("input/16.txt")
-	fp := tp.filter()
-	fmt.Println(fp.mapping())
+	i := initZWP("input/17.txt")
+	fmt.Println(simulate2(i))
 }
