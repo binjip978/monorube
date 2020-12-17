@@ -1353,6 +1353,193 @@ func elvesGame(numbers []int) int {
 	return lastNumber
 }
 
+// problem 16
+
+type interval struct {
+	begin int
+	end   int
+}
+
+type ticketClass struct {
+	name string
+	i1   interval
+	i2   interval
+}
+
+func (t *ticketClass) in(value int) bool {
+	i1 := value >= t.i1.begin && value <= t.i1.end
+	i2 := value >= t.i2.begin && value <= t.i2.end
+	return i1 || i2
+}
+
+func newTicketClass(line string) *ticketClass {
+	s1 := strings.Split(line, ": ")
+	s2 := strings.Split(s1[1], " or ")
+	s3 := strings.Split(s2[0], "-")
+	s4 := strings.Split(s2[1], "-")
+
+	b1, _ := strconv.Atoi(s3[0])
+	e1, _ := strconv.Atoi(s3[1])
+	b2, _ := strconv.Atoi(s4[0])
+	e2, _ := strconv.Atoi(s4[1])
+
+	return &ticketClass{
+		name: s1[0],
+		i1:   interval{b1, e1},
+		i2:   interval{b2, e2},
+	}
+}
+
+type trainProblem struct {
+	classes      []*ticketClass
+	yourTickets  []int
+	otherTickets [][]int
+}
+
+func newTrainProblem(filename string) *trainProblem {
+	lines := readLines(filename)
+	mode := "class"
+
+	var classes []*ticketClass
+	var your []int
+	var other [][]int
+
+	for _, line := range lines {
+		switch line {
+		case "":
+			if mode == "your" {
+				mode = "other"
+			}
+			if mode == "class" {
+				mode = "your"
+			}
+		default:
+			switch mode {
+			case "class":
+				classes = append(classes, newTicketClass(line))
+			case "your":
+				sp := strings.Split(line, ",")
+				for _, s := range sp {
+					v, _ := strconv.Atoi(s)
+					your = append(your, v)
+				}
+			case "other":
+				sp := strings.Split(line, ",")
+				var ot []int
+				for _, s := range sp {
+					v, _ := strconv.Atoi(s)
+					ot = append(ot, v)
+				}
+				other = append(other, ot)
+			}
+		}
+	}
+
+	return &trainProblem{classes, your, other}
+}
+
+func (t *trainProblem) errorRate() int {
+	var errorRate int
+	for _, ticket := range t.otherTickets {
+		for _, v := range ticket {
+			var hit bool
+			for _, class := range t.classes {
+				if class.in(v) {
+					hit = true
+					break
+				}
+			}
+			if !hit {
+				errorRate += v
+			}
+		}
+	}
+
+	return errorRate
+}
+
+// 1: to avoid bag in parse
+func (t *trainProblem) filter() *trainProblem {
+	var filtered [][]int
+
+	for _, ticket := range t.otherTickets[1:] {
+		goodTicket := true
+		for _, v := range ticket {
+			ok := false
+			for _, class := range t.classes {
+				if class.in(v) {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				goodTicket = false
+				break
+			}
+		}
+		if goodTicket {
+			filtered = append(filtered, ticket)
+		}
+	}
+
+	return &trainProblem{t.classes, t.yourTickets[1:], filtered}
+}
+
+func (t *trainProblem) mapping() int {
+	cols := make(map[int][]int)
+	for i := 0; i < len(t.otherTickets[0]); i++ {
+		var c []int
+		for j := 0; j < len(t.otherTickets); j++ {
+			c = append(c, t.otherTickets[j][i])
+		}
+		cols[i] = c
+	}
+
+	cls := make(map[*ticketClass]bool)
+
+	for _, c := range t.classes {
+		cls[c] = true
+	}
+
+	res := make(map[string]int)
+
+	for len(cls) != 0 {
+		for class := range cls {
+			var hc []int
+
+			for i, col := range cols {
+				all := true
+				for _, v := range col {
+					if !class.in(v) {
+						all = false
+						break
+					}
+				}
+				if all {
+					hc = append(hc, i)
+				}
+			}
+
+			if len(hc) == 1 {
+				res[class.name] = hc[0]
+				delete(cls, class)
+				delete(cols, hc[0])
+			}
+		}
+	}
+
+	cnt := 1
+	for k, v := range res {
+		if strings.Contains(k, "departure") {
+			cnt *= t.yourTickets[v]
+		}
+	}
+
+	return cnt
+}
+
 func main() {
-	fmt.Println(elvesGame([]int{6, 19, 0, 5, 7, 13, 1}))
+	tp := newTrainProblem("input/16.txt")
+	fp := tp.filter()
+	fmt.Println(fp.mapping())
 }
