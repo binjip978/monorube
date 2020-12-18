@@ -1717,7 +1717,235 @@ func simulate2(xs []zwp) int {
 	return len(univ)
 }
 
+// problem 18
+
+type lexem struct {
+	operator rune
+	value    int
+}
+
+func (l lexem) String() string {
+	if l.operator == 0 {
+		return fmt.Sprintf("%d", l.value)
+	} else {
+		return string(l.operator)
+	}
+}
+
+func lexer(line string) []lexem {
+	var res []lexem
+
+	var b bytes.Buffer
+	for _, c := range line {
+		switch c {
+		case '+':
+			res = append(res, lexem{operator: '+'})
+		case '*':
+			res = append(res, lexem{operator: '*'})
+		case ' ':
+			if b.Len() != 0 {
+				v, _ := strconv.Atoi(b.String())
+				res = append(res, lexem{value: v})
+				b.Reset()
+			}
+		case '(':
+			res = append(res, lexem{operator: '('})
+		case ')':
+			if b.Len() != 0 {
+				v, _ := strconv.Atoi(b.String())
+				res = append(res, lexem{value: v})
+				b.Reset()
+			}
+			res = append(res, lexem{operator: ')'})
+		default:
+			b.WriteRune(c)
+		}
+	}
+
+	if b.Len() != 0 {
+		v, _ := strconv.Atoi(b.String())
+		res = append(res, lexem{value: v})
+	}
+
+	return res
+}
+
+type stack struct {
+	s []lexem
+}
+
+func (s *stack) isEmpty() bool {
+	return len(s.s) == 0
+}
+
+func (s *stack) push(l lexem) {
+	s.s = append(s.s, l)
+}
+
+func (s *stack) peek() (lexem, error) {
+	if s.isEmpty() {
+		return lexem{}, fmt.Errorf("stack is empty")
+	}
+
+	return s.s[len(s.s)-1], nil
+}
+
+func (s *stack) pop() (lexem, error) {
+	if s.isEmpty() {
+		return lexem{}, fmt.Errorf("stack is empty")
+	}
+
+	elem := s.s[len(s.s)-1]
+	s.s = s.s[:len(s.s)-1]
+
+	return elem, nil
+}
+
+func evaluate(lexems []lexem) int {
+	s := stack{}
+	for _, next := range lexems {
+		if next.operator == 0 {
+			prev, _ := s.peek()
+			if prev.operator == '(' {
+				s.push(next)
+				continue
+			}
+
+			prev, err := s.pop()
+			if err != nil {
+				s.push(next)
+				continue
+			}
+
+			if prev.operator == '+' {
+				pprev, _ := s.pop()
+				s.push(lexem{value: next.value + pprev.value})
+				continue
+			}
+
+			if prev.operator == '*' {
+				pprev, _ := s.pop()
+				s.push(lexem{value: next.value * pprev.value})
+				continue
+			}
+		}
+		if next.operator == '+' || next.operator == '*' || next.operator == '(' {
+			s.push(next)
+			continue
+		}
+		if next.operator == ')' {
+			curr, err := s.pop()
+			if err != nil {
+				panic(err)
+			}
+			_, _ = s.pop()
+			op, _ := s.peek()
+			if op.operator == '*' || op.operator == '+' {
+				op, _ := s.pop()
+				v2, _ := s.pop()
+
+				if op.operator == '*' {
+					s.push(lexem{value: curr.value * v2.value})
+					continue
+				}
+				if op.operator == '+' {
+					s.push(lexem{value: curr.value + v2.value})
+					continue
+				}
+			} else {
+				s.push(curr)
+			}
+		}
+	}
+	r, _ := s.pop()
+	if !s.isEmpty() {
+		fmt.Println(lexems)
+	}
+
+	return r.value
+}
+
+func homework(filename string) uint64 {
+	lines := readLines(filename)
+	var sum uint64
+	for _, line := range lines {
+		ls := lexer(line)
+		s := evaluate(ls)
+		sum += uint64(s)
+	}
+
+	return sum
+}
+
+// advanced math -> use two stacks!
+func evaluate2(lx []lexem) int {
+	terms := stack{}
+	op := stack{}
+
+	for _, c := range lx {
+		switch c.operator {
+		case 0:
+			terms.push(c)
+		case '(':
+			op.push(c)
+		case ')':
+			prev, _ := op.peek()
+			for prev.operator != '(' && !op.isEmpty() {
+				t1, _ := terms.pop()
+				t2, _ := terms.pop()
+				operand, _ := op.pop()
+				if operand.operator == '+' {
+					terms.push(lexem{value: t1.value + t2.value})
+				}
+				if operand.operator == '*' {
+					terms.push(lexem{value: t1.value * t2.value})
+				}
+				prev, _ = op.peek()
+			}
+			op.pop()
+		case '+':
+			op.push(c)
+		case '*':
+			prev, _ := op.peek()
+			for !op.isEmpty() && prev.operator == '+' {
+				t1, _ := terms.pop()
+				t2, _ := terms.pop()
+				_, _ = op.pop()
+				terms.push(lexem{value: t1.value + t2.value})
+				prev, _ = op.peek()
+			}
+			op.push(c)
+		}
+	}
+
+	for !op.isEmpty() {
+		t1, _ := terms.pop()
+		t2, _ := terms.pop()
+		operand, _ := op.pop()
+		if operand.operator == '+' {
+			terms.push(lexem{value: t1.value + t2.value})
+		}
+		if operand.operator == '*' {
+			terms.push(lexem{value: t1.value * t2.value})
+		}
+	}
+
+	r, _ := terms.pop()
+	return r.value
+}
+
+func homework2(filename string) uint64 {
+	lines := readLines(filename)
+	var sum uint64
+	for _, line := range lines {
+		ls := lexer(line)
+		s := evaluate2(ls)
+		sum += uint64(s)
+	}
+
+	return sum
+}
+
 func main() {
-	i := initZWP("input/17.txt")
-	fmt.Println(simulate2(i))
+	fmt.Println(homework2("input/18.txt"))
 }
