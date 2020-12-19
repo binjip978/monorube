@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -1946,6 +1947,128 @@ func homework2(filename string) uint64 {
 	return sum
 }
 
+// problem 19
+
+type term struct {
+	final bool
+	value string
+	expr  [][]int
+	id    int
+}
+
+func (t *term) terminate(m map[int]*term) string {
+	if t.final {
+		return t.value
+	}
+
+	if t.id == 8 {
+		t42 := m[42]
+		return t42.terminate(m) + "+"
+	}
+
+	if t.id == 11 {
+		t42 := m[42]
+		t31 := m[31]
+		return "((" + t42.terminate(m) + "){x}(" + t31.terminate(m) + "){x})"
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("(")
+	for i := 0; i < len(t.expr); i++ {
+		if i > 0 {
+			buf.WriteString("|")
+		}
+		for _, tid := range t.expr[i] {
+			tt := m[tid]
+			buf.WriteString(tt.terminate(m))
+		}
+	}
+	buf.WriteString(")")
+
+	return buf.String()
+}
+
+func parseGramar(filename string) (map[int]*term, []string) {
+	mode := "term"
+	lines := readLines(filename)
+	var xs []string
+	m := make(map[int]*term)
+
+	for _, line := range lines {
+		if line == "" {
+			mode = "string"
+		}
+		switch mode {
+		case "term":
+			s1 := strings.Split(line, ": ")
+			id, _ := strconv.Atoi(s1[0])
+
+			if strings.Contains(s1[1], "\"") {
+				f := strings.Trim(s1[1], "\"")
+				m[id] = &term{true, f, nil, id}
+				continue
+			}
+
+			s2 := strings.Split(s1[1], " | ")
+			var expr [][]int
+			for _, s3 := range s2 {
+				s4 := strings.Split(s3, " ")
+				var e1 []int
+				for _, s5 := range s4 {
+					v, _ := strconv.Atoi(s5)
+					e1 = append(e1, v)
+				}
+				expr = append(expr, e1)
+			}
+			m[id] = &term{false, "", expr, id}
+		case "string":
+			xs = append(xs, line)
+		}
+	}
+
+	return m, xs
+}
+
+func elvishImage(m map[int]*term, xs []string) int {
+	t1 := m[0]
+	rx := t1.terminate(m)
+	rx = strings.ReplaceAll(rx, "x", "5")
+	r := regexp.MustCompile("^" + rx + "$")
+
+	var cnt int
+	for _, s := range xs {
+		if r.MatchString(s) {
+			cnt++
+		}
+	}
+
+	return cnt
+}
+
+func elvishImageX(m map[int]*term, xs []string, x int) int {
+	t1 := m[0]
+	rx := t1.terminate(m)
+	xx := strconv.Itoa(x)
+	rx = strings.ReplaceAll(rx, "x", xx)
+	r := regexp.MustCompile("^" + rx + "$")
+
+	var cnt int
+	for _, s := range xs {
+		if r.MatchString(s) {
+			cnt++
+		}
+	}
+
+	return cnt
+}
+
 func main() {
-	fmt.Println(homework2("input/18.txt"))
+	m, xs := parseGramar("input/19.txt")
+	var cnt int
+
+	for i := 1; i < 5; i++ {
+		cnt += elvishImageX(m, xs, i)
+	}
+
+	fmt.Println(cnt)
 }
