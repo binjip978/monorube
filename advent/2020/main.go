@@ -2062,13 +2062,105 @@ func elvishImageX(m map[int]*term, xs []string, x int) int {
 	return cnt
 }
 
-func main() {
-	m, xs := parseGramar("input/19.txt")
-	var cnt int
+// problem 20
 
-	for i := 1; i < 5; i++ {
-		cnt += elvishImageX(m, xs, i)
+type square struct {
+	i  []string
+	id int
+}
+
+func (s square) String() string {
+	var b bytes.Buffer
+	b.WriteString(fmt.Sprintf("id: %d\n", s.id))
+	for _, l := range s.i {
+		b.WriteString(fmt.Sprintf("%s\n", l))
 	}
 
-	fmt.Println(cnt)
+	return b.String()
+}
+
+func (s square) lines() []string {
+	var l bytes.Buffer
+	var r bytes.Buffer
+
+	for i := 0; i < 10; i++ {
+		l.WriteByte(s.i[i][0])
+		r.WriteByte(s.i[i][9])
+	}
+
+	return []string{
+		s.i[0],
+		reverse(s.i[0]),
+		s.i[9],
+		reverse(s.i[9]),
+		l.String(),
+		reverse(l.String()),
+		r.String(),
+		reverse(r.String()),
+	}
+}
+
+func reverse(s string) string {
+	var b bytes.Buffer
+	for i := len(s) - 1; i >= 0; i-- {
+		b.WriteByte(s[i])
+	}
+
+	return b.String()
+}
+
+func parseSquares(filename string) []square {
+	var sq []square
+	lines := readLines(filename)
+	var curr square
+	for _, line := range lines {
+		if strings.Contains(line, "Tile") {
+			s := strings.Split(line, " ")
+			id, _ := strconv.Atoi(s[1][:4])
+			curr.i = nil
+			curr.id = id
+			continue
+		}
+		if line == "" {
+			sq = append(sq, curr)
+			continue
+		}
+		curr.i = append(curr.i, line)
+	}
+
+	return sq
+}
+
+func countEdges(sqx []square) map[string][]int {
+	m := make(map[string][]int)
+	for _, s := range sqx {
+		ls := s.lines()
+		for _, l := range ls {
+			v, _ := m[l]
+			v = append(v, s.id)
+			m[l] = v
+		}
+	}
+
+	return m
+}
+
+func main() {
+	sqx := parseSquares("input/20.txt")
+	m := countEdges(sqx)
+	cnt := make(map[int]int)
+	for _, v := range m {
+		if len(v) == 1 {
+			cnt[v[0]] = cnt[v[0]] + 1
+		}
+	}
+
+	res := 1
+	for k, v := range cnt {
+		if v == 4 {
+			res *= k
+		}
+	}
+
+	fmt.Println(res)
 }
