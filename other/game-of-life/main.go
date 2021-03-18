@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -34,7 +35,7 @@ func newGrid(width int, height int) [][]bool {
 }
 
 // New creates new game of life
-func new(width int, height int, prob float64) *life {
+func New(width int, height int, prob float64) *life {
 	grid := newGrid(width, height)
 
 	// init seed
@@ -128,11 +129,46 @@ func (l *life) step() {
 	l.grid = nextGrid
 }
 
+type cfg struct {
+	width  int
+	height int
+	prob   float64
+	epoch  int
+	show   bool
+}
+
+func parseCFG() cfg {
+	c := cfg{}
+
+	flag.IntVar(&c.width, "width", 120, "board width")
+	flag.IntVar(&c.height, "height", 26, "board height")
+	flag.Float64Var(&c.prob, "prob", 0.1, "initial point prob")
+	flag.BoolVar(&c.show, "show", true, "show grid")
+	flag.IntVar(&c.epoch, "epoch", 10, "epoch number, -1 for infinite")
+
+	flag.Parse()
+	return c
+}
+
 func main() {
-	game := new(120, 26, 0.1)
-	for i := 0; i < 120; i++ {
-		game.print()
-		game.step()
-		time.Sleep(2 * time.Second)
+	cfg := parseCFG()
+	fmt.Printf("config: %+v\n", cfg)
+	game := New(cfg.width, cfg.height, cfg.prob)
+	if cfg.epoch == -1 {
+		for {
+			if cfg.show {
+				game.print()
+				game.step()
+				time.Sleep(2 * time.Second)
+			}
+		}
+	}
+
+	for i := 0; i < cfg.epoch; i++ {
+		if cfg.show {
+			game.print()
+			game.step()
+			time.Sleep(2 * time.Second)
+		}
 	}
 }
