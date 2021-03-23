@@ -33,19 +33,18 @@ kind: Ingress
 metadata:
   name: example-ingress
   annotations:
-    # nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /v1/$2
     nginx.ingress.kubernetes.io/proxy-read-timeout: "150"
 spec:
   rules:
     - host: hello-world.info
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /v(1|2|3)/(.*)
+            pathType: Exact
             backend:
               service:
                 name: hello-sleepy-service
                 port:
                   number: 8000
 
-  
