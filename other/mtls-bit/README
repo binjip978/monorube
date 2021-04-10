@@ -1,0 +1,11 @@
+### README
+
+## mTLS client/server
+
+Heartbeat each other with mutual TLS using certificate pinning.
+
+## generate certificates
+
+go run $GOROOT/src/crypto/tls/generate_cert.go -host localhost -ecdsa-curve P256
+./mtls-bit -id=2 -addr=localhost:8082 -peerAddr=localhost:8081
+./mtls-bit -id=1 -addr=localhost:8081 -peerAddr=localhost:8082
