@@ -1,0 +1,9 @@
+[Unit]
+Description=Prometheus
+
+[Service]
+User=root
+ExecStart=/usr/sbin/prometheus --storage.tsdb.path /data/tsdb/ --config.file=/etc/prometheus.yml
+
+[Install]
+WantedBy=multi-user.target
