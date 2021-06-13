@@ -50,7 +50,7 @@ func (s *server) put(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) get(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
