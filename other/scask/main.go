@@ -22,8 +22,11 @@ func main() {
 	cfg := parseCfg()
 	log.Printf("config: %+v\n", cfg)
 
-	backend := newMemStore()
-	srv := newServer(cfg, backend)
+	backend, err := newSCask("./cask.dat")
+	if err != nil {
+		panic(err)
+	}
 
+	srv := newServer(cfg, backend)
 	log.Fatal(srv.httpServer.ListenAndServe())
 }
