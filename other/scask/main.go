@@ -22,7 +22,7 @@ func main() {
 	cfg := parseCfg()
 	log.Printf("config: %+v\n", cfg)
 
-	backend, err := newSCask("./cask.dat")
+	backend, err := newSCask(".data")
 	if err != nil {
 		panic(err)
 	}

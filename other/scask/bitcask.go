@@ -4,7 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"hash/crc32"
+	"io"
+	"io/fs"
+	"log"
 	"os"
+	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -27,19 +32,93 @@ type cask struct {
 	sync.RWMutex
 }
 
-func newSCask(storagePath string) (*cask, error) {
-	// TODO: reuse old file and rebuild the index
-	_ = os.Remove(storagePath)
-	f, err := os.OpenFile(storagePath, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0755)
+var storageFileRegexp = regexp.MustCompile(`storage_\d+\.dat`)
+
+// newSCask should open a directory and if its empty create storage file
+// and setup in memory index, if directory is not empty it should rebuild
+// in memory index and make the latest file as open, open file is file that
+// accepts all recent changes
+func newSCask(storageDir string) (*cask, error) {
+	var dataFiles []string
+	err := filepath.WalkDir(storageDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			panic(err)
+		}
+
+		if d.Type().IsRegular() && storageFileRegexp.MatchString(d.Name()) {
+			dataFiles = append(dataFiles, d.Name())
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("files on disk: ", dataFiles)
+
+	// create first dataFile in empty dir and cask object
+	if len(dataFiles) == 0 {
+		f, err := os.OpenFile(storageDir+"/storage_1.dat", os.O_CREATE|os.O_RDWR|os.O_EXCL, 0755)
+		if err != nil {
+			return nil, err
+		}
+
+		return &cask{
+			dataFile:   f,
+			index:      make(map[string]int64),
+			lastOffset: 0,
+		}, nil
+	}
+
+	index := make(map[string]int64)
+
+	for _, file := range dataFiles {
+		err = readDataFile(storageDir+"/"+file, index)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	of, err := os.OpenFile(storageDir+"/storage_1.dat", os.O_APPEND|os.O_RDWR|os.O_EXCL, 0755)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo, err := of.Stat()
 	if err != nil {
 		return nil, err
 	}
 
 	return &cask{
-		dataFile:   f,
-		index:      make(map[string]int64),
-		lastOffset: 0,
+		dataFile:   of,
+		index:      index,
+		lastOffset: fileInfo.Size(),
 	}, nil
+}
+
+func readDataFile(file string, index map[string]int64) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	var offset int64
+
+	for {
+		e, err := readRecord(f, offset)
+		if err == io.EOF {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		index[e.key] = offset
+		offset = offset + headerSize + int64(e.keySize) + int64(e.valueSize)
+	}
 }
 
 func (c *cask) get(key string) (string, error) {
@@ -128,7 +207,11 @@ func prepareRecord(key string, value string) (uint32, []byte) {
 func readRecord(f *os.File, offset int64) (*entry, error) {
 	b := make([]byte, headerSize)
 	reader := bytes.NewReader(b)
-	f.ReadAt(b, offset)
+
+	_, err := f.ReadAt(b, offset)
+	if err == io.EOF {
+		return nil, io.EOF
+	}
 
 	var crc uint32
 	var ts int32
