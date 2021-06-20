@@ -3,13 +3,17 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"hash/crc32"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -31,6 +35,7 @@ type cask struct {
 	lastOffset int64
 	sync.RWMutex
 	nameFileMap map[string]*os.File
+	storageDir  string
 }
 
 type keyRecord struct {
@@ -80,22 +85,47 @@ func newSCask(storageDir string) (*cask, error) {
 			index:       make(map[string]keyRecord),
 			lastOffset:  0,
 			nameFileMap: nameFileMap,
+			storageDir:  storageDir,
 		}, nil
 	}
 
 	index := make(map[string]keyRecord)
+	nameFileMap := make(map[string]*os.File)
 
 	for _, file := range dataFiles {
+		// TODO: we need this file handle to populate nameFileMap
 		err = readDataFile(storageDir+"/"+file, index)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	of, err := os.OpenFile(storageDir+"/storage_1.dat", os.O_APPEND|os.O_RDWR|os.O_EXCL, 0755)
+	var lastesID int
+
+	for _, file := range dataFiles {
+		sp := strings.Split(file, "_")
+		sp = strings.Split(sp[len(sp)-1], ".")
+		i, err := strconv.Atoi(sp[0])
+		if err != nil {
+			panic(err)
+		}
+		if i > lastesID {
+			lastesID = i
+		}
+		f, err := os.Open(storageDir + "/" + file)
+		nameFileMap[f.Name()] = f
+	}
+
+	of := nameFileMap[storageDir+"/"+fmt.Sprintf("storage_%d.dat", lastesID)]
+	lastestName := of.Name()
+	_ = of.Close()
+
+	of, err = os.OpenFile(lastestName, os.O_APPEND|os.O_RDWR|os.O_EXCL, 0755)
 	if err != nil {
 		return nil, err
 	}
+
+	nameFileMap[of.Name()] = of
 
 	fileInfo, err := of.Stat()
 	if err != nil {
@@ -103,10 +133,54 @@ func newSCask(storageDir string) (*cask, error) {
 	}
 
 	return &cask{
-		dataFile:   of,
-		index:      index,
-		lastOffset: fileInfo.Size(),
+		dataFile:    of,
+		index:       index,
+		lastOffset:  fileInfo.Size(),
+		storageDir:  storageDir,
+		nameFileMap: nameFileMap,
 	}, nil
+}
+
+// nextDataFile should be called in the end of put when offset is bigger
+// than threshold, it's not concurrently save to call this function
+// otherwise
+func (c *cask) nextDataFile() error {
+	files, err := ioutil.ReadDir(c.storageDir)
+	if err != nil {
+		return err
+	}
+
+	var lastesID int
+
+	for _, file := range files {
+		if file.Mode().IsRegular() && storageFileRegexp.MatchString(file.Name()) {
+			sp := strings.Split(file.Name(), "_")
+			sp = strings.Split(sp[len(sp)-1], ".")
+			cand, err := strconv.Atoi(sp[0])
+
+			if err != nil {
+				return err
+			}
+
+			if cand > lastesID {
+				lastesID = cand
+			}
+
+		}
+	}
+
+	f, err := os.OpenFile(fmt.Sprintf("%s/storage_%d.dat", c.storageDir, lastesID+1),
+		os.O_CREATE|os.O_RDWR|os.O_EXCL, 0755)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(c.nameFileMap)
+	c.nameFileMap[f.Name()] = f
+	c.lastOffset = 0
+	c.dataFile = f
+
+	return nil
 }
 
 func readDataFile(file string, index map[string]keyRecord) error {
@@ -188,6 +262,14 @@ func (c *cask) put(key string, value string) error {
 		ts:        0,
 	}
 	c.lastOffset += int64(n) + 4
+
+	log.Println("current offset is: ", c.lastOffset)
+	if c.lastOffset > 100 {
+		err := c.nextDataFile()
+		if err != nil {
+			log.Println(err)
+		}
+	}
 
 	return nil
 }

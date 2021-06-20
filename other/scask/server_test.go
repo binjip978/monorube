@@ -63,8 +63,7 @@ func TestServerAPI(t *testing.T) {
 }
 
 func TestBitcaskInstance(t *testing.T) {
-	storageDir := t.TempDir()
-	cask, err := newSCask(storageDir)
+	cask, err := newSCask(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
