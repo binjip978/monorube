@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,24 +50,12 @@ var storageFileRegexp = regexp.MustCompile(`storage_\d+\.dat`)
 // in memory index and make the latest file as open, open file is file that
 // accepts all recent changes
 func newSCask(storageDir string) (*cask, error) {
-	var dataFiles []string
-	err := filepath.WalkDir(storageDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			panic(err)
-		}
-
-		if d.Type().IsRegular() && storageFileRegexp.MatchString(d.Name()) {
-			dataFiles = append(dataFiles, d.Name())
-		}
-
-		return nil
-	})
+	dataFiles, err := bitcaskFiles(storageDir)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println("files on disk: ", dataFiles)
-
 	// create first dataFile in empty dir and cask object
 	if len(dataFiles) == 0 {
 		f, err := os.OpenFile(storageDir+"/storage_1.dat", os.O_CREATE|os.O_RDWR|os.O_EXCL, 0755)
@@ -94,29 +80,27 @@ func newSCask(storageDir string) (*cask, error) {
 
 	for _, file := range dataFiles {
 		// TODO: we need this file handle to populate nameFileMap
-		err = readDataFile(storageDir+"/"+file, index)
+		err = readDataFile(file, index)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var lastesID int
-
+	var latestID int
 	for _, file := range dataFiles {
-		sp := strings.Split(file, "_")
-		sp = strings.Split(sp[len(sp)-1], ".")
-		i, err := strconv.Atoi(sp[0])
+		cand := fileID(file)
+		if cand > latestID {
+			latestID = cand
+		}
+
+		f, err := os.Open(file)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		if i > lastesID {
-			lastesID = i
-		}
-		f, err := os.Open(storageDir + "/" + file)
 		nameFileMap[f.Name()] = f
 	}
 
-	of := nameFileMap[storageDir+"/"+fmt.Sprintf("storage_%d.dat", lastesID)]
+	of := nameFileMap[fmt.Sprintf("%s/storage_%d.dat", storageDir, latestID)]
 	lastestName := of.Name()
 	_ = of.Close()
 
@@ -145,37 +129,25 @@ func newSCask(storageDir string) (*cask, error) {
 // than threshold, it's not concurrently save to call this function
 // otherwise
 func (c *cask) nextDataFile() error {
-	files, err := ioutil.ReadDir(c.storageDir)
+	dataFiles, err := bitcaskFiles(c.storageDir)
 	if err != nil {
 		return err
 	}
 
-	var lastesID int
-
-	for _, file := range files {
-		if file.Mode().IsRegular() && storageFileRegexp.MatchString(file.Name()) {
-			sp := strings.Split(file.Name(), "_")
-			sp = strings.Split(sp[len(sp)-1], ".")
-			cand, err := strconv.Atoi(sp[0])
-
-			if err != nil {
-				return err
-			}
-
-			if cand > lastesID {
-				lastesID = cand
-			}
-
+	var latestID int
+	for _, file := range dataFiles {
+		cand := fileID(file)
+		if cand > latestID {
+			latestID = cand
 		}
 	}
 
-	f, err := os.OpenFile(fmt.Sprintf("%s/storage_%d.dat", c.storageDir, lastesID+1),
+	f, err := os.OpenFile(fmt.Sprintf("%s/storage_%d.dat", c.storageDir, latestID+1),
 		os.O_CREATE|os.O_RDWR|os.O_EXCL, 0755)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(c.nameFileMap)
 	c.nameFileMap[f.Name()] = f
 	c.lastOffset = 0
 	c.dataFile = f
@@ -356,4 +328,30 @@ func readRecord(f *os.File, offset int64) (*entry, error) {
 	}
 
 	return &e, nil
+}
+
+func bitcaskFiles(storagePath string) ([]string, error) {
+	var files []string
+	fs, err := ioutil.ReadDir(storagePath)
+	if err != nil {
+		return files, err
+	}
+
+	for _, f := range fs {
+		if f.Mode().IsRegular() && storageFileRegexp.MatchString(f.Name()) {
+			files = append(files, storagePath+"/"+f.Name())
+		}
+	}
+
+	return files, nil
+}
+
+// lastID should get last number from file that
+// should match to storage_\d+\.dat
+func fileID(filename string) int {
+	sp := strings.Split(filename, "_")
+	sp = strings.Split(sp[len(sp)-1], ".")
+	cand, _ := strconv.Atoi(sp[0])
+
+	return cand
 }
