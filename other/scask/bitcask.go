@@ -27,9 +27,16 @@ const headerSize = 4 + 4 + 4 + 8
 
 type cask struct {
 	dataFile   *os.File
-	index      map[string]int64
+	index      map[string]keyRecord
 	lastOffset int64
 	sync.RWMutex
+}
+
+type keyRecord struct {
+	fileID    string
+	valueSize uint64
+	valuePos  int64
+	ts        int32
 }
 
 var storageFileRegexp = regexp.MustCompile(`storage_\d+\.dat`)
@@ -66,12 +73,12 @@ func newSCask(storageDir string) (*cask, error) {
 
 		return &cask{
 			dataFile:   f,
-			index:      make(map[string]int64),
+			index:      make(map[string]keyRecord),
 			lastOffset: 0,
 		}, nil
 	}
 
-	index := make(map[string]int64)
+	index := make(map[string]keyRecord)
 
 	for _, file := range dataFiles {
 		err = readDataFile(storageDir+"/"+file, index)
@@ -97,7 +104,7 @@ func newSCask(storageDir string) (*cask, error) {
 	}, nil
 }
 
-func readDataFile(file string, index map[string]int64) error {
+func readDataFile(file string, index map[string]keyRecord) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return err
@@ -116,7 +123,13 @@ func readDataFile(file string, index map[string]int64) error {
 			return err
 		}
 
-		index[e.key] = offset
+		index[e.key] = keyRecord{
+			fileID:    file,
+			valueSize: e.valueSize,
+			valuePos:  offset,
+			ts:        e.timestamp,
+		}
+
 		offset = offset + headerSize + int64(e.keySize) + int64(e.valueSize)
 	}
 }
@@ -125,12 +138,12 @@ func (c *cask) get(key string) (string, error) {
 	c.RLock()
 	defer c.RUnlock()
 
-	offset, ok := c.index[key]
+	kr, ok := c.index[key]
 	if !ok {
 		return "", errKeyNotFount
 	}
 
-	entry, err := readRecord(c.dataFile, offset)
+	entry, err := readRecord(c.dataFile, kr.valuePos)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +170,13 @@ func (c *cask) put(key string, value string) error {
 		return err
 	}
 
-	c.index[key] = c.lastOffset
+	// TODO: fix me
+	c.index[key] = keyRecord{
+		fileID:    c.dataFile.Name(),
+		valueSize: 0,
+		valuePos:  c.lastOffset,
+		ts:        0,
+	}
 	c.lastOffset += int64(n) + 4
 
 	return nil
