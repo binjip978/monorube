@@ -30,6 +30,7 @@ type cask struct {
 	index      map[string]keyRecord
 	lastOffset int64
 	sync.RWMutex
+	nameFileMap map[string]*os.File
 }
 
 type keyRecord struct {
@@ -71,10 +72,14 @@ func newSCask(storageDir string) (*cask, error) {
 			return nil, err
 		}
 
+		nameFileMap := make(map[string]*os.File)
+		nameFileMap[f.Name()] = f
+
 		return &cask{
-			dataFile:   f,
-			index:      make(map[string]keyRecord),
-			lastOffset: 0,
+			dataFile:    f,
+			index:       make(map[string]keyRecord),
+			lastOffset:  0,
+			nameFileMap: nameFileMap,
 		}, nil
 	}
 
@@ -143,7 +148,12 @@ func (c *cask) get(key string) (string, error) {
 		return "", errKeyNotFount
 	}
 
-	entry, err := readRecord(c.dataFile, kr.valuePos)
+	f, ok := c.nameFileMap[kr.fileID]
+	if !ok {
+		panic("something is wrong")
+	}
+
+	entry, err := readRecord(f, kr.valuePos)
 	if err != nil {
 		return "", err
 	}
